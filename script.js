@@ -20,11 +20,7 @@ function buscarSugerencias(texto, numero) {
       const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=10`);
       const data = await res.json();
 
-      let productos = data.products
-        .filter(p =>
-          p.product_name &&
-          p.product_name.length < 50
-        );
+      let productos = data.products.filter(p => p.product_name);
 
       contenedor.innerHTML = productos.slice(0, 5).map(p => `
         <div class="sugerencia" onclick="seleccionarProducto(${numero}, '${p.product_name.replace(/'/g, "")}')">
@@ -43,12 +39,7 @@ function buscarSugerencias(texto, numero) {
 // 📌 SELECCIONAR
 // ==========================
 function seleccionarProducto(numero, nombre) {
-
-  const input = document.getElementById("barcode" + numero);
-  input.value = nombre;
-
-  input.style.border = "2px solid green";
-
+  document.getElementById("barcode" + numero).value = nombre;
   cerrarSugerencias();
 }
 
@@ -66,35 +57,27 @@ document.addEventListener("click", function(e) {
   }
 });
 
-// reset visual
-document.getElementById("barcode1").addEventListener("input", function() {
-  this.style.border = "2px solid #ccc";
-});
-
-document.getElementById("barcode2").addEventListener("input", function() {
-  this.style.border = "2px solid #ccc";
-});
-
 // ==========================
-// 🔎 BUSCAR PRODUCTO (CLAVE)
+// 🔎 BUSCAR PRODUCTO (FIX)
 // ==========================
 async function buscarProducto(nombre) {
 
   const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`);
   const data = await res.json();
 
-  return data.products.find(p =>
-    p.product_name &&
-    p.nutriments
-  ) || data.products[0];
+  // 🔥 fallback inteligente
+  return data.products.find(p => p.product_name) || data.products[0];
 }
 
 // ==========================
-// 🧠 SCORE
+// 🧠 SCORE (SEGURO)
 // ==========================
 function calcularScore(p) {
 
-  const n = p.nutriments || {};
+  if (!p || !p.nutriments) return 5; // valor neutro
+
+  const n = p.nutriments;
+
   let score = 10;
 
   if ((n.sugars_100g || 0) > 10) score -= 3;
@@ -105,7 +88,7 @@ function calcularScore(p) {
 }
 
 // ==========================
-// ⚔️ COMPARAR (SIN BLOQUEOS)
+// ⚔️ COMPARAR (ROBUSTO)
 // ==========================
 async function compararProductos() {
 
@@ -143,12 +126,12 @@ async function compararProductos() {
 
     resultado.innerHTML = `
       <div class="card">
-        <h3>${p1.product_name}</h3>
+        <h3>${p1.product_name || "Producto 1"}</h3>
         <p>Score: ${s1}/10</p>
       </div>
 
       <div class="card">
-        <h3>${p2.product_name}</h3>
+        <h3>${p2.product_name || "Producto 2"}</h3>
         <p>Score: ${s2}/10</p>
       </div>
 

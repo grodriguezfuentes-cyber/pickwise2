@@ -1,0 +1,54 @@
+[
+  { "nombre": "coca cola", "marca": "coca cola", "categoria": "bebida", "azucar": 10, "grasa": 0, "proteina": 0, "procesado": 9 },
+  { "nombre": "pepsi", "marca": "pepsi", "categoria": "bebida", "azucar": 11, "grasa": 0, "proteina": 0, "procesado": 9 },
+  { "nombre": "fanta", "marca": "coca cola", "categoria": "bebida", "azucar": 9, "grasa": 0, "proteina": 0, "procesado": 9 },
+  { "nombre": "red bull", "marca": "red bull", "categoria": "bebida", "azucar": 11, "grasa": 0, "proteina": 0, "procesado": 10 },
+  { "nombre": "zumo naranja", "marca": "generico", "categoria": "bebida", "azucar": 8, "grasa": 0, "proteina": 1, "procesado": 4 },
+
+  { "nombre": "nutella", "marca": "ferrero", "categoria": "crema", "azucar": 56, "grasa": 30, "proteina": 6, "procesado": 9 },
+  { "nombre": "nocilla", "marca": "idilia", "categoria": "crema", "azucar": 50, "grasa": 31, "proteina": 5, "procesado": 9 },
+
+  { "nombre": "galletas maria", "marca": "generico", "categoria": "galletas", "azucar": 20, "grasa": 10, "proteina": 6, "procesado": 8 },
+  { "nombre": "oreo", "marca": "oreo", "categoria": "galletas", "azucar": 38, "grasa": 18, "proteina": 5, "procesado": 9 },
+  { "nombre": "digestive", "marca": "generico", "categoria": "galletas", "azucar": 18, "grasa": 14, "proteina": 7, "procesado": 7 },
+
+  { "nombre": "doritos", "marca": "lays", "categoria": "snack", "azucar": 3, "grasa": 30, "proteina": 6, "procesado": 9 },
+  { "nombre": "lays", "marca": "lays", "categoria": "snack", "azucar": 2, "grasa": 32, "proteina": 6, "procesado": 9 },
+  { "nombre": "pringles", "marca": "pringles", "categoria": "snack", "azucar": 1, "grasa": 35, "proteina": 5, "procesado": 9 },
+
+  { "nombre": "pan blanco", "marca": "generico", "categoria": "pan", "azucar": 5, "grasa": 2, "proteina": 7, "procesado": 6 },
+  { "nombre": "pan integral", "marca": "generico", "categoria": "pan", "azucar": 4, "grasa": 1, "proteina": 8, "procesado": 4 },
+
+  { "nombre": "leche entera", "marca": "generico", "categoria": "lacteo", "azucar": 5, "grasa": 3, "proteina": 3, "procesado": 3 },
+  { "nombre": "leche desnatada", "marca": "generico", "categoria": "lacteo", "azucar": 5, "grasa": 0, "proteina": 3, "procesado": 3 },
+  { "nombre": "yogur natural", "marca": "generico", "categoria": "lacteo", "azucar": 5, "grasa": 3, "proteina": 5, "procesado": 3 },
+  { "nombre": "yogur azucarado", "marca": "generico", "categoria": "lacteo", "azucar": 12, "grasa": 3, "proteina": 4, "procesado": 6 },
+
+  { "nombre": "queso cheddar", "marca": "generico", "categoria": "lacteo", "azucar": 1, "grasa": 33, "proteina": 25, "procesado": 6 },
+  { "nombre": "queso fresco", "marca": "generico", "categoria": "lacteo", "azucar": 2, "grasa": 10, "proteina": 11, "procesado": 4 },
+
+  { "nombre": "manzana", "marca": "generico", "categoria": "fruta", "azucar": 10, "grasa": 0, "proteina": 0, "procesado": 1 },
+  { "nombre": "platano", "marca": "generico", "categoria": "fruta", "azucar": 12, "grasa": 0, "proteina": 1, "procesado": 1 },
+  { "nombre": "melocoton", "marca": "generico", "categoria": "fruta", "azucar": 8, "grasa": 0, "proteina": 1, "procesado": 1 },
+  { "nombre": "naranja", "marca": "generico", "categoria": "fruta", "azucar": 9, "grasa": 0, "proteina": 1, "procesado": 1 },
+
+  { "nombre": "brocoli", "marca": "generico", "categoria": "verdura", "azucar": 2, "grasa": 0, "proteina": 3, "procesado": 1 },
+  { "nombre": "zanahoria", "marca": "generico", "categoria": "verdura", "azucar": 5, "grasa": 0, "proteina": 1, "procesado": 1 },
+  { "nombre": "tomate", "marca": "generico", "categoria": "verdura", "azucar": 3, "grasa": 0, "proteina": 1, "procesado": 1 },
+
+  { "nombre": "cereales azucarados", "marca": "generico", "categoria": "cereal", "azucar": 25, "grasa": 5, "proteina": 6, "procesado": 8 },
+  { "nombre": "cereales integrales", "marca": "generico", "categoria": "cereal", "azucar": 10, "grasa": 3, "proteina": 8, "procesado": 5 },
+
+  { "nombre": "mantequilla", "marca": "generico", "categoria": "grasa", "azucar": 0, "grasa": 80, "proteina": 1, "procesado": 6 },
+  { "nombre": "margarina", "marca": "generico", "categoria": "grasa", "azucar": 0, "grasa": 70, "proteina": 1, "procesado": 8 },
+
+  { "nombre": "huevo", "marca": "generico", "categoria": "proteina", "azucar": 1, "grasa": 11, "proteina": 13, "procesado": 1 },
+  { "nombre": "pollo", "marca": "generico", "categoria": "proteina", "azucar": 0, "grasa": 5, "proteina": 27, "procesado": 2 },
+  { "nombre": "ternera", "marca": "generico", "categoria": "proteina", "azucar": 0, "grasa": 15, "proteina": 26, "procesado": 2 },
+
+  { "nombre": "pizza", "marca": "generico", "categoria": "ultraprocesado", "azucar": 5, "grasa": 20, "proteina": 12, "procesado": 9 },
+  { "nombre": "hamburguesa", "marca": "generico", "categoria": "ultraprocesado", "azucar": 6, "grasa": 25, "proteina": 15, "procesado": 9 },
+
+  { "nombre": "helado", "marca": "generico", "categoria": "dulce", "azucar": 22, "grasa": 11, "proteina": 4, "procesado": 8 },
+  { "nombre": "chocolate", "marca": "generico", "categoria": "dulce", "azucar": 50, "grasa": 30, "proteina": 6, "procesado": 9 }
+]

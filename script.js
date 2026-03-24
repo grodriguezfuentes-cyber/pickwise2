@@ -1,14 +1,9 @@
-
-// CONTROL DE PETICIONES
 let timeout = null;
-let ultimaBusqueda = "";
 
 // ==========================
-// 🔍 BUSCADOR INTELIGENTE (MEJORADO)
+// 🔍 BUSCADOR
 // ==========================
 function buscarSugerencias(texto, numero) {
-
-  ultimaBusqueda = texto;
 
   clearTimeout(timeout);
 
@@ -17,34 +12,32 @@ function buscarSugerencias(texto, numero) {
     return;
   }
 
-  timeout = setTimeout(async () => {
+  timeout = setTimeout(() => {
 
-    try {
-      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=5`);
-      const data = await res.json();
+    fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=5`)
+      .then(res => res.json())
+      .then(data => {
 
-      // ❌ Evita resultados viejos
-      if (texto !== ultimaBusqueda) return;
+        const contenedor = document.getElementById("sugerencias" + numero);
 
-      const contenedor = document.getElementById("sugerencias" + numero);
+        const productos = data.products.filter(p => p.product_name);
 
-      contenedor.innerHTML = data.products
-        .filter(p => p.product_name)
-        .map(p => `
+        contenedor.innerHTML = productos.map(p => `
           <div class="sugerencia" onclick="seleccionarProducto('${p.product_name.replace(/'/g, "")}', ${numero})">
             ${p.product_name}
           </div>
         `).join("");
 
-    } catch (error) {
-      console.error("Error búsqueda", error);
-    }
+      })
+      .catch(() => {
+        document.getElementById("sugerencias" + numero).innerHTML = "";
+      });
 
-  }, 400); // ⏱️ espera antes de buscar
+  }, 300);
 }
 
 // ==========================
-// 📌 SELECCIONAR PRODUCTO
+// 📌 SELECCIONAR
 // ==========================
 function seleccionarProducto(nombre, numero) {
   document.getElementById("barcode" + numero).value = nombre;
@@ -81,7 +74,7 @@ async function compararProductos() {
     const p2 = await buscarProducto(n2);
 
     if (!p1 || !p2) {
-      document.getElementById("resultado").innerHTML = "No se encontraron productos";
+      document.getElementById("resultado").innerHTML = "Producto no encontrado";
       return;
     }
 

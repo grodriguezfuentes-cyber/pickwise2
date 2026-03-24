@@ -20,24 +20,31 @@
     }
 
     button {
-      padding: 10px;
+      padding: 12px;
       width: 80%;
       background: black;
       color: white;
       border: none;
       margin-top: 10px;
+      border-radius: 8px;
     }
 
     .sugerencias {
       width: 80%;
       margin: auto;
       background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
     .sugerencia {
       padding: 10px;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid #eee;
       cursor: pointer;
+    }
+
+    .sugerencia:hover {
+      background: #f5f5f5;
     }
   </style>
 
@@ -53,7 +60,7 @@
   placeholder="Ej: Nutella"
   oninput="buscarSugerencias(this.value, 1)"
 >
-<div id="sugerencias1"></div>
+<div id="sugerencias1" class="sugerencias"></div>
 
 <input 
   type="text" 
@@ -61,14 +68,13 @@
   placeholder="Ej: Coca Cola"
   oninput="buscarSugerencias(this.value, 2)"
 >
-<div id="sugerencias2"></div>
+<div id="sugerencias2" class="sugerencias"></div>
 
 <button onclick="compararProductos()">Comparar</button>
 
 <div id="resultado"></div>
 
-<!-- 🔥 CLAVE -->
-<script src="script.js?v=999"></script>
+<script src="script.js?v=20"></script>
 
 </body>
 </html>

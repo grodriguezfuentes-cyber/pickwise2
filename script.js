@@ -1,12 +1,12 @@
 // ==========================
-// 🧠 ESTADO
+// ESTADO GLOBAL
 // ==========================
 let producto1 = null;
 let producto2 = null;
 let timeout = null;
 
 // ==========================
-// 🔍 BUSCADOR
+// BUSCAR SUGERENCIAS
 // ==========================
 function buscarSugerencias(texto, numero) {
 
@@ -25,11 +25,17 @@ function buscarSugerencias(texto, numero) {
       const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=10`);
       const data = await res.json();
 
-      let productos = data.products.filter(p => p.product_name);
+      let productos = data.products.filter(p => 
+        p.product_name &&
+        p.product_name.length < 60 &&
+        !p.product_name.toLowerCase().includes("ingredient") &&
+        !p.product_name.toLowerCase().includes("http") &&
+        !p.product_name.toLowerCase().includes("www")
+      );
 
       contenedor.innerHTML = productos.slice(0, 5).map(p => `
         <div class="sugerencia" onclick='seleccionarProducto(${numero}, ${JSON.stringify(p)})'>
-          ${p.product_name}
+          ${p.product_name.substring(0, 50)}
         </div>
       `).join("");
 
@@ -41,7 +47,7 @@ function buscarSugerencias(texto, numero) {
 }
 
 // ==========================
-// 📌 SELECCIONAR
+// SELECCIONAR PRODUCTO
 // ==========================
 function seleccionarProducto(numero, producto) {
 
@@ -57,15 +63,21 @@ function seleccionarProducto(numero, producto) {
 }
 
 // ==========================
-// ❌ CERRAR
+// CERRAR SUGERENCIAS
 // ==========================
 function cerrarSugerencias() {
   document.getElementById("sugerencias1").innerHTML = "";
   document.getElementById("sugerencias2").innerHTML = "";
 }
 
+document.addEventListener("click", function(e) {
+  if (!e.target.classList.contains("input-busqueda")) {
+    cerrarSugerencias();
+  }
+});
+
 // ==========================
-// 🧠 SCORE
+// SCORE
 // ==========================
 function calcularScore(p) {
 
@@ -83,7 +95,7 @@ function calcularScore(p) {
 }
 
 // ==========================
-// 🔎 BUSCAR POR TEXTO (NUEVO)
+// BUSCAR POR TEXTO (FALLBACK)
 // ==========================
 async function buscarProductoPorTexto(nombre) {
 
@@ -94,7 +106,7 @@ async function buscarProductoPorTexto(nombre) {
 }
 
 // ==========================
-// ⚔️ COMPARAR (ULTRA ROBUSTO)
+// COMPARAR
 // ==========================
 async function compararProductos() {
 
@@ -114,7 +126,6 @@ async function compararProductos() {
 
   try {
 
-    // 🔥 CLAVE: fallback inteligente
     if (!producto1) {
       producto1 = await buscarProductoPorTexto(input1);
     }

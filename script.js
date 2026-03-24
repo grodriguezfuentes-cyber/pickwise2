@@ -1,47 +1,66 @@
-// ==========================
-// 📦 CARGAR BASE DE DATOS
-// ==========================
 let baseDatos = [];
 
+// ==========================
+// 📦 CARGAR BASE
+// ==========================
 async function cargarBaseDatos() {
-  try {
-    const res = await fetch("productos.json");
-    baseDatos = await res.json();
-  } catch (e) {
-    console.error("Error cargando base de datos");
-  }
+  const res = await fetch("productos.json");
+  baseDatos = await res.json();
 }
 
 // ==========================
-// 🔍 BUSCAR PRODUCTO
+// 🔍 AUTOCOMPLETADO
+// ==========================
+function mostrarSugerencias(input, idLista) {
+  const valor = input.value.toLowerCase();
+  const contenedor = document.getElementById(idLista);
+
+  contenedor.innerHTML = "";
+
+  if (valor.length < 2) return;
+
+  const resultados = baseDatos
+    .filter(p => p.nombre.includes(valor))
+    .slice(0, 5);
+
+  resultados.forEach(p => {
+    const div = document.createElement("div");
+    div.classList.add("suggestion-item");
+    div.textContent = p.nombre;
+
+    div.onclick = () => {
+      input.value = p.nombre;
+      contenedor.innerHTML = "";
+    };
+
+    contenedor.appendChild(div);
+  });
+}
+
+// ==========================
+// 🔍 BUSCAR
 // ==========================
 function buscarProducto(nombre) {
   nombre = nombre.toLowerCase();
-
-  return baseDatos.find(p =>
-    nombre.includes(p.nombre)
-  );
+  return baseDatos.find(p => nombre.includes(p.nombre));
 }
 
 // ==========================
-// 🧠 SCORE TIPO YUKA (0–100)
+// 🧠 SCORE
 // ==========================
 function calcularScore(p) {
   let score = 100;
 
-  // Penalizaciones
   score -= p.azucar * 2;
   score -= p.grasa * 1.5;
   score -= p.procesado * 5;
-
-  // Bonus pequeño
   score += p.proteina * 1;
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 // ==========================
-// 🟢🔴 CLASIFICACIÓN
+// 🟢🔴 CLASIFICAR
 // ==========================
 function clasificar(score) {
   if (score >= 70) return { texto: "🟢 Bueno", color: "green" };
@@ -50,7 +69,7 @@ function clasificar(score) {
 }
 
 // ==========================
-// 🧠 GENERADOR SI NO EXISTE
+// 🧠 GENERADOR
 // ==========================
 function generarProducto(nombre) {
   nombre = nombre.toLowerCase();
@@ -59,7 +78,7 @@ function generarProducto(nombre) {
     return { azucar: 8, grasa: 0, proteina: 1, procesado: 1 };
   }
 
-  if (nombre.includes("chocolate") || nombre.includes("galleta")) {
+  if (nombre.includes("chocolate")) {
     return { azucar: 40, grasa: 25, proteina: 3, procesado: 9 };
   }
 
@@ -71,7 +90,7 @@ function generarProducto(nombre) {
 }
 
 // ==========================
-// 💡 EXPLICACIÓN INTELIGENTE
+// 💡 EXPLICAR
 // ==========================
 function explicar(p1, p2) {
 
@@ -82,20 +101,11 @@ function explicar(p1, p2) {
     else diferencias.push("más azúcar");
   }
 
-  if (Math.abs(p1.grasa - p2.grasa) > 5) {
-    if (p1.grasa < p2.grasa) diferencias.push("menos grasa");
-    else diferencias.push("más grasa");
-  }
-
-  if (Math.abs(p1.proteina - p2.proteina) > 3) {
-    if (p1.proteina > p2.proteina) diferencias.push("más proteína");
-  }
-
   if (Math.abs(p1.procesado - p2.procesado) > 2) {
     if (p1.procesado < p2.procesado) diferencias.push("menos procesado");
   }
 
-  if (diferencias.length === 0) return "Son muy similares";
+  if (diferencias.length === 0) return "Son similares";
 
   return "Tiene " + diferencias.join(", ");
 }
@@ -108,15 +118,6 @@ function comparar() {
   const input1 = document.getElementById("producto1").value.trim();
   const input2 = document.getElementById("producto2").value.trim();
   const resultadoDiv = document.getElementById("resultado");
-  const errorDiv = document.getElementById("error");
-
-  resultadoDiv.innerHTML = "";
-  errorDiv.textContent = "";
-
-  if (!input1 || !input2) {
-    errorDiv.textContent = "Introduce ambos productos";
-    return;
-  }
 
   let p1 = buscarProducto(input1) || generarProducto(input1);
   let p2 = buscarProducto(input2) || generarProducto(input2);
@@ -159,7 +160,5 @@ function comparar() {
   `;
 }
 
-// ==========================
-// 🚀 INICIAR
 // ==========================
 cargarBaseDatos();

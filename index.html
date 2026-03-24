@@ -18,6 +18,7 @@
       width: 90%;
       max-width: 400px;
       text-align: center;
+      position: relative;
     }
 
     input {
@@ -47,26 +48,51 @@
       border-radius: 10px;
     }
 
-    .error {
-      color: red;
-      margin-top: 10px;
+    .suggestions {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      text-align: left;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      width: 100%;
+      z-index: 10;
     }
+
+    .suggestion-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .suggestion-item:hover {
+      background: #eee;
+    }
+
   </style>
 </head>
 
 <body>
 
 <div class="container">
+
   <h1>PickWise 🛒</h1>
   <p>Compara productos inteligentes</p>
 
-  <input id="producto1" placeholder="Producto 1">
-  <input id="producto2" placeholder="Producto 2">
+  <div style="position:relative;">
+    <input id="producto1" placeholder="Producto 1" oninput="mostrarSugerencias(this, 'sug1')">
+    <div id="sug1" class="suggestions"></div>
+  </div>
+
+  <div style="position:relative;">
+    <input id="producto2" placeholder="Producto 2" oninput="mostrarSugerencias(this, 'sug2')">
+    <div id="sug2" class="suggestions"></div>
+  </div>
 
   <button onclick="comparar()">Comparar</button>
 
-  <div id="error" class="error"></div>
   <div id="resultado"></div>
+
 </div>
 
 <script src="script.js"></script>

@@ -19,7 +19,6 @@ function mostrarSugerencias(input, idSugerencias) {
     p.nombre.toLowerCase().includes(valor)
   );
 
-  // 👉 Si estamos escribiendo en producto2, filtramos por categoría del producto1
   if (idSugerencias === "sug2") {
     const nombre1 = document.getElementById("producto1").value.toLowerCase();
     const p1 = productos.find(p => p.nombre === nombre1);
@@ -53,11 +52,24 @@ function calcularScore(p) {
   );
 }
 
-// COLOR
-function getColor(score) {
-  if (score > -5) return "green";
-  if (score > -15) return "orange";
-  return "red";
+// NOTA A–E
+function getNota(score) {
+  if (score > -5) return "A";
+  if (score > -10) return "B";
+  if (score > -15) return "C";
+  if (score > -20) return "D";
+  return "E";
+}
+
+// COLOR POR NOTA
+function getColorNota(nota) {
+  switch (nota) {
+    case "A": return "green";
+    case "B": return "#66bb6a";
+    case "C": return "orange";
+    case "D": return "#ff7043";
+    case "E": return "red";
+  }
 }
 
 // EXPLICACIÓN
@@ -87,7 +99,6 @@ function comparar() {
     return;
   }
 
-  // VALIDACIÓN
   if (p1.categoria !== p2.categoria) {
     document.getElementById("resultado").innerHTML = `
       <div class="card">
@@ -103,6 +114,9 @@ function comparar() {
   const score1 = calcularScore(p1);
   const score2 = calcularScore(p2);
 
+  const nota1 = getNota(score1);
+  const nota2 = getNota(score2);
+
   let ganador, explicacion;
 
   if (score1 > score2) {
@@ -117,22 +131,22 @@ function comparar() {
   }
 
   document.getElementById("resultado").innerHTML = `
-    <div class="card" style="border-left: 5px solid ${getColor(score1)}">
+    <div class="card" style="border-left: 10px solid ${getColorNota(nota1)}">
       <h3>${p1.nombre}</h3>
+      <h2 style="color:${getColorNota(nota1)}">${nota1}</h2>
       Azúcar: ${p1.azucar}g<br>
       Grasa: ${p1.grasa}g<br>
       Proteína: ${p1.proteina}g<br>
-      Procesado: ${p1.procesado}/10<br>
-      <b>Score: ${score1}</b>
+      Procesado: ${p1.procesado}/10
     </div>
 
-    <div class="card" style="border-left: 5px solid ${getColor(score2)}">
+    <div class="card" style="border-left: 10px solid ${getColorNota(nota2)}">
       <h3>${p2.nombre}</h3>
+      <h2 style="color:${getColorNota(nota2)}">${nota2}</h2>
       Azúcar: ${p2.azucar}g<br>
       Grasa: ${p2.grasa}g<br>
       Proteína: ${p2.proteina}g<br>
-      Procesado: ${p2.procesado}/10<br>
-      <b>Score: ${score2}</b>
+      Procesado: ${p2.procesado}/10
     </div>
 
     <h2>🏆 Mejor opción: ${ganador ? ganador.nombre : "Empate"}</h2>

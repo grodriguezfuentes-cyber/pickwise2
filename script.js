@@ -1,44 +1,38 @@
 let timeout = null;
 
 // ==========================
-// 🔍 BUSCADOR MEJORADO
+// 🔍 BUSCADOR (SIN FILTRO PROBLEMÁTICO)
 // ==========================
 function buscarSugerencias(texto, numero) {
 
   clearTimeout(timeout);
 
-  if (texto.length < 3) {
+  if (texto.length < 2) {
     document.getElementById("sugerencias" + numero).innerHTML = "";
     return;
   }
 
-  timeout = setTimeout(async () => {
+  timeout = setTimeout(() => {
 
-    try {
-      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=10`);
-      const data = await res.json();
+    fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=5`)
+      .then(res => res.json())
+      .then(data => {
 
-      const contenedor = document.getElementById("sugerencias" + numero);
+        const contenedor = document.getElementById("sugerencias" + numero);
 
-      const textoLower = texto.toLowerCase();
+        const productos = data.products
+          .filter(p => p.product_name);
 
-      // 🔥 FILTRO INTELIGENTE
-      const productosFiltrados = data.products
-        .filter(p => p.product_name)
-        .filter(p => p.product_name.toLowerCase().includes(textoLower))
-        .slice(0, 5);
+        contenedor.innerHTML = productos.map(p => `
+          <div class="sugerencia" onclick="seleccionarProducto('${p.product_name.replace(/'/g, "")}', ${numero})">
+            ${p.product_name}
+          </div>
+        `).join("");
 
-      contenedor.innerHTML = productosFiltrados.map(p => `
-        <div class="sugerencia" onclick="seleccionarProducto('${p.product_name.replace(/'/g, "")}', ${numero})">
-          ${p.product_name}
-        </div>
-      `).join("");
+      })
+      .catch(err => console.error(err));
 
-    } catch (error) {
-      console.error(error);
-    }
-
-  }, 400);
+  }, 300);
 }
 
 // ==========================

@@ -6,7 +6,7 @@ let producto2 = null;
 let timeout = null;
 
 // ==========================
-// 🔍 BUSCAR SUGERENCIAS (RÁPIDO Y LIMPIO)
+// 🔍 BUSCAR SUGERENCIAS (MEJORADO)
 // ==========================
 function buscarSugerencias(texto, numero) {
 
@@ -22,12 +22,17 @@ function buscarSugerencias(texto, numero) {
   timeout = setTimeout(async () => {
 
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=10`);
+      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=20`);
       const data = await res.json();
 
       let productos = data.products
-        .filter(p => p.product_name && p.product_name.length < 50)
-        .slice(0, 5);
+        .filter(p =>
+          p.product_name &&
+          p.product_name.length < 40 && // 🔥 evita textos largos basura
+          !p.product_name.includes("{") &&
+          !p.product_name.includes("ingredients")
+        )
+        .slice(0, 6);
 
       if (productos.length === 0) {
         contenedor.innerHTML = `<div class="sugerencia">No hay resultados</div>`;
@@ -41,11 +46,10 @@ function buscarSugerencias(texto, numero) {
       `).join("");
 
     } catch (e) {
-      console.error(e);
       contenedor.innerHTML = `<div class="sugerencia">Error al buscar</div>`;
     }
 
-  }, 100); // ⚡ rápido
+  }, 200);
 }
 
 // ==========================
@@ -65,7 +69,7 @@ function seleccionarProducto(numero, producto) {
 }
 
 // ==========================
-// ❌ CERRAR SUGERENCIAS
+// ❌ CERRAR LISTAS
 // ==========================
 function cerrarSugerencias() {
   document.getElementById("sugerencias1").innerHTML = "";
@@ -79,7 +83,15 @@ document.addEventListener("click", function(e) {
 });
 
 // ==========================
-// 🧠 SCORE
+// 🔄 LIMPIAR SELECCIÓN SI EDITAS
+// ==========================
+function resetProducto(numero) {
+  if (numero === 1) producto1 = null;
+  if (numero === 2) producto2 = null;
+}
+
+// ==========================
+// 🧠 SCORE SIMPLE
 // ==========================
 function calcularScore(p) {
 
@@ -97,53 +109,23 @@ function calcularScore(p) {
 }
 
 // ==========================
-// 🌍 TRADUCCIÓN BÁSICA
-// ==========================
-function traducir(texto) {
-
-  const diccionario = {
-    "sandia": "watermelon",
-    "melocoton": "peach",
-    "platano": "banana",
-    "naranja": "orange",
-    "manzana": "apple",
-    "lechuga": "lettuce",
-    "papaya": "papaya"
-  };
-
-  return diccionario[texto.toLowerCase()] || texto;
-}
-
-// ==========================
-// 🔎 BUSCAR PRODUCTO (ROBUSTO)
+// 🔎 BUSCAR PRODUCTO (SIN FALLAR)
 // ==========================
 async function buscarProductoPorTexto(nombre) {
 
   try {
-    // intento en español
-    let res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`);
-    let data = await res.json();
+    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`);
+    const data = await res.json();
 
-    let producto = data.products.find(p => p.product_name);
+    return data.products.find(p => p.product_name);
 
-    if (producto) return producto;
-
-    // fallback en inglés
-    let nombreTraducido = traducir(nombre);
-
-    let res2 = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombreTraducido}&search_simple=1&action=process&json=1&page_size=5`);
-    let data2 = await res2.json();
-
-    return data2.products.find(p => p.product_name);
-
-  } catch (e) {
-    console.error(e);
+  } catch {
     return null;
   }
 }
 
 // ==========================
-// ⚔️ COMPARAR PRODUCTOS
+// ⚔️ COMPARAR
 // ==========================
 async function compararProductos() {
 
@@ -151,7 +133,6 @@ async function compararProductos() {
 
   const input1 = document.getElementById("barcode1").value.trim();
   const input2 = document.getElementById("barcode2").value.trim();
-
   const resultado = document.getElementById("resultado");
 
   if (!input1 || !input2) {
@@ -163,13 +144,9 @@ async function compararProductos() {
 
   try {
 
-    if (!producto1) {
-      producto1 = await buscarProductoPorTexto(input1);
-    }
-
-    if (!producto2) {
-      producto2 = await buscarProductoPorTexto(input2);
-    }
+    // 🔥 Si no seleccionó, intentamos buscar igual
+    if (!producto1) producto1 = await buscarProductoPorTexto(input1);
+    if (!producto2) producto2 = await buscarProductoPorTexto(input2);
 
     if (!producto1 || !producto2) {
       resultado.innerHTML = "❌ No se encontraron productos";
@@ -199,7 +176,6 @@ async function compararProductos() {
     `;
 
   } catch (e) {
-    console.error(e);
     resultado.innerHTML = "❌ Error al comparar";
   }
 }

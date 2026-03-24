@@ -255,3 +255,35 @@ function seleccionarProducto(nombre, numero) {
   document.getElementById("barcode" + numero).value = nombre;
   document.getElementById("sugerencias" + numero).innerHTML = "";
 }
+let timeout = null;
+
+function buscarSugerencias(texto, numero) {
+  clearTimeout(timeout);
+
+  if (texto.length < 2) {
+    document.getElementById("sugerencias" + numero).innerHTML = "";
+    return;
+  }
+
+  timeout = setTimeout(async () => {
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=5`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const sugerencias = data.products || [];
+
+    const contenedor = document.getElementById("sugerencias" + numero);
+
+    contenedor.innerHTML = sugerencias.map(p => `
+      <div class="sugerencia" onclick="seleccionarProducto('${p.product_name}', ${numero})">
+        ${p.product_name || "Sin nombre"}
+      </div>
+    `).join("");
+  }, 300);
+}
+
+function seleccionarProducto(nombre, numero) {
+  document.getElementById("barcode" + numero).value = nombre;
+  document.getElementById("sugerencias" + numero).innerHTML = "";
+}

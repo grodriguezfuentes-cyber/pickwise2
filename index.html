@@ -3,39 +3,122 @@
 <head>
   <meta charset="UTF-8">
   <title>PickWise</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 5px;
+    }
+
+    p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: black;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .sugerencias {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .sugerencia {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .sugerencia:hover {
+      background: #f0f0f0;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    #resultado {
+      margin-top: 20px;
+    }
+  </style>
 </head>
+
 <body>
 
   <div class="container">
     <h1>PickWise 🛒</h1>
     <p>Busca y compara productos</p>
 
-    <!-- Producto 1 -->
+    <!-- INPUT 1 -->
     <input 
-      type="text" 
-      id="barcode1" 
+      id="barcode1"
       class="input-busqueda"
       placeholder="Producto 1"
-      oninput="buscarSugerencias(this.value, 1)"
+      oninput="buscarSugerencias(this.value, 1); resetProducto(1)"
     >
     <div id="sugerencias1" class="sugerencias"></div>
 
-    <!-- Producto 2 -->
+    <!-- INPUT 2 -->
     <input 
-      type="text" 
-      id="barcode2" 
+      id="barcode2"
       class="input-busqueda"
       placeholder="Producto 2"
-      oninput="buscarSugerencias(this.value, 2)"
+      oninput="buscarSugerencias(this.value, 2); resetProducto(2)"
     >
     <div id="sugerencias2" class="sugerencias"></div>
 
+    <!-- BOTÓN -->
     <button onclick="compararProductos()">Comparar</button>
 
+    <!-- RESULTADO -->
     <div id="resultado"></div>
+
   </div>
 
+  <!-- SCRIPT -->
   <script src="script.js"></script>
+
 </body>
 </html>

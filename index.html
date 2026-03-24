@@ -2,79 +2,41 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>PickWise</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      padding: 20px;
-    }
-
-    input {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
-      width: 80%;
-    }
-
-    button {
-      padding: 12px;
-      width: 80%;
-      background: black;
-      color: white;
-      border: none;
-      margin-top: 10px;
-      border-radius: 8px;
-    }
-
-    .sugerencias {
-      width: 80%;
-      margin: auto;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    .sugerencia {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-    }
-
-    .sugerencia:hover {
-      background: #f5f5f5;
-    }
-  </style>
-
+  <title>PickWise MVP</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>PickWise 🛒</h1>
-<p>Escribe el nombre del producto</p>
+  <h1>PickWise 🛒</h1>
+  <p>Escribe el nombre del producto</p>
 
-<input 
-  type="text" 
-  id="barcode1" 
-  placeholder="Ej: Nutella"
-  oninput="buscarSugerencias(this.value, 1)"
->
-<div id="sugerencias1" class="sugerencias"></div>
+  <!-- INPUT 1 -->
+  <input 
+    type="text" 
+    id="barcode1" 
+    class="input-busqueda"
+    placeholder="Ej: Nutella"
+    oninput="buscarSugerencias(this.value, 1)"
+  >
+  <div id="sugerencias1" class="sugerencias"></div>
 
-<input 
-  type="text" 
-  id="barcode2" 
-  placeholder="Ej: Coca Cola"
-  oninput="buscarSugerencias(this.value, 2)"
->
-<div id="sugerencias2" class="sugerencias"></div>
+  <!-- INPUT 2 -->
+  <input 
+    type="text" 
+    id="barcode2" 
+    class="input-busqueda"
+    placeholder="Ej: Coca Cola"
+    oninput="buscarSugerencias(this.value, 2)"
+  >
+  <div id="sugerencias2" class="sugerencias"></div>
 
-<button onclick="compararProductos()">Comparar</button>
+  <!-- BOTÓN -->
+  <button onclick="compararProductos()">Comparar</button>
 
-<div id="resultado"></div>
+  <!-- RESULTADO -->
+  <div id="resultado"></div>
 
-<script src="script.js?v=20"></script>
+  <script src="script.js"></script>
 
 </body>
 </html>

@@ -1,128 +1,69 @@
 
-// ==========================
-// 🔎 BUSCAR PRODUCTO POR NOMBRE
-// ==========================
-async function buscarPorNombre(nombre) {
-  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=1`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  return data.products[0] || null;
-}
-
-// ==========================
-// 🔎 BUSCADOR INTELIGENTE
-// ==========================
-let timeout = null;
-
+// BUSCAR SUGERENCIAS
 function buscarSugerencias(texto, numero) {
-  clearTimeout(timeout);
 
   if (texto.length < 2) {
     document.getElementById("sugerencias" + numero).innerHTML = "";
     return;
   }
 
-  timeout = setTimeout(async () => {
-    try {
-      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=5`;
-
-      const res = await fetch(url);
-      const data = await res.json();
-
-      const sugerencias = data.products || [];
+  fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=5`)
+    .then(res => res.json())
+    .then(data => {
 
       const contenedor = document.getElementById("sugerencias" + numero);
 
-      contenedor.innerHTML = sugerencias.map(p => `
-        <div class="sugerencia" onclick="seleccionarProducto('${p.product_name.replace(/'/g, "")}', ${numero})">
-          ${p.product_name || "Sin nombre"}
+      contenedor.innerHTML = data.products.map(p => `
+        <div class="sugerencia" onclick="seleccionarProducto('${p.product_name}', ${numero})">
+          ${p.product_name}
         </div>
       `).join("");
 
-    } catch (error) {
-      console.error("Error en sugerencias", error);
-    }
-  }, 300);
+    })
+    .catch(err => console.error(err));
 }
 
-// ==========================
-// 📌 SELECCIONAR PRODUCTO
-// ==========================
+// SELECCIONAR
 function seleccionarProducto(nombre, numero) {
   document.getElementById("barcode" + numero).value = nombre;
   document.getElementById("sugerencias" + numero).innerHTML = "";
 }
 
-// ==========================
-// 🧮 CONTAR INGREDIENTES
-// ==========================
-function contarIngredientes(texto) {
-  if (!texto) return 0;
-  return texto.split(",").length;
+// BUSCAR PRODUCTO
+async function buscarProducto(nombre) {
+  const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=1`);
+  const data = await res.json();
+  return data.products[0];
 }
 
-// ==========================
-// ⭐ SCORE
-// ==========================
-function calcularScore(producto) {
-  let score = 10;
-
-  const ingredientes = (producto.ingredients_text || "").toLowerCase();
-  const numIngredientes = contarIngredientes(ingredientes);
-  const nutriments = producto.nutriments || {};
-
-  const azucar = nutriments.sugars_100g || 0;
-  const grasa = nutriments.fat_100g || 0;
-
-  if (numIngredientes > 15) score -= 3;
-  if (azucar > 10) score -= 3;
-  if (grasa > 15) score -= 2;
-
-  if (score < 1) score = 1;
-
-  return score;
-}
-
-// ==========================
-// ⚔️ COMPARAR
-// ==========================
+// COMPARAR
 async function compararProductos() {
-  const nombre1 = document.getElementById("barcode1").value;
-  const nombre2 = document.getElementById("barcode2").value;
 
-  if (!nombre1 || !nombre2) {
+  const n1 = document.getElementById("barcode1").value;
+  const n2 = document.getElementById("barcode2").value;
+
+  if (!n1 || !n2) {
     document.getElementById("resultado").innerHTML = "Introduce ambos productos";
     return;
   }
 
   try {
-    const p1 = await buscarPorNombre(nombre1);
-    const p2 = await buscarPorNombre(nombre2);
+
+    const p1 = await buscarProducto(n1);
+    const p2 = await buscarProducto(n2);
 
     if (!p1 || !p2) {
       document.getElementById("resultado").innerHTML = "Producto no encontrado";
       return;
     }
 
-    const score1 = calcularScore(p1);
-    const score2 = calcularScore(p2);
-
-    const ganador = score1 > score2 
-      ? "🟢 Producto 1 mejor"
-      : score2 > score1
-      ? "🟢 Producto 2 mejor"
-      : "🟡 Son similares";
-
     document.getElementById("resultado").innerHTML = `
-      <h2>${ganador}</h2>
-      <p>${p1.product_name} (${score1}/10)</p>
-      <p>${p2.product_name} (${score2}/10)</p>
+      <h2>Resultado</h2>
+      <p>${p1.product_name}</p>
+      <p>${p2.product_name}</p>
     `;
 
   } catch (error) {
-    console.error(error);
     document.getElementById("resultado").innerHTML = "Error al comparar";
   }
 }

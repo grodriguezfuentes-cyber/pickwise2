@@ -4,14 +4,28 @@ const listaEjemplo = [
   "Nutella",
   "Chocolate negro",
   "Chocolate blanco",
+  "Galletas",
+  "Doritos",
   "Leche",
   "Pan",
-  "Queso",
-  "Yogur",
-  "Cereales"
+  "Queso"
 ];
 
-// AUTOCOMPLETE SIMPLE
+// BASE DE DATOS SIMPLE (simulación real)
+const datosProductos = {
+  "coca cola": { azucar: 10, grasa: 0, proteina: 0 },
+  "pepsi": { azucar: 11, grasa: 0, proteina: 0 },
+  "nutella": { azucar: 56, grasa: 30, proteina: 6 },
+  "chocolate negro": { azucar: 20, grasa: 35, proteina: 7 },
+  "chocolate blanco": { azucar: 55, grasa: 32, proteina: 5 },
+  "galletas": { azucar: 25, grasa: 20, proteina: 4 },
+  "doritos": { azucar: 3, grasa: 30, proteina: 6 },
+  "leche": { azucar: 5, grasa: 3, proteina: 3 },
+  "pan": { azucar: 4, grasa: 1, proteina: 8 },
+  "queso": { azucar: 1, grasa: 33, proteina: 25 }
+};
+
+// AUTOCOMPLETE
 function mostrarSugerencias(inputId) {
   const input = document.getElementById(inputId);
   let lista = document.getElementById(inputId + "-lista");
@@ -53,15 +67,26 @@ function mostrarSugerencias(inputId) {
   });
 }
 
-// ACTIVAR AUTOCOMPLETE
 mostrarSugerencias("producto1");
 mostrarSugerencias("producto2");
 
+// FUNCIÓN DE SCORING REAL
+function calcularScore(p) {
+  if (!p) return 0;
 
-// COMPARAR (sin romper nada)
+  let score = 10;
+
+  score -= p.azucar * 0.1;
+  score -= p.grasa * 0.1;
+  score += p.proteina * 0.2;
+
+  return Math.max(1, Math.min(10, Math.round(score)));
+}
+
+// COMPARAR
 function comparar() {
-  const input1 = document.getElementById("producto1").value.trim();
-  const input2 = document.getElementById("producto2").value.trim();
+  const input1 = document.getElementById("producto1").value.toLowerCase().trim();
+  const input2 = document.getElementById("producto2").value.toLowerCase().trim();
   const errorDiv = document.getElementById("error");
   const resultadoDiv = document.getElementById("resultado");
 
@@ -73,8 +98,16 @@ function comparar() {
     return;
   }
 
-  const score1 = Math.floor(Math.random() * 10) + 1;
-  const score2 = Math.floor(Math.random() * 10) + 1;
+  const p1 = datosProductos[input1];
+  const p2 = datosProductos[input2];
+
+  if (!p1 || !p2) {
+    errorDiv.textContent = "Producto no reconocido (usa sugerencias)";
+    return;
+  }
+
+  const score1 = calcularScore(p1);
+  const score2 = calcularScore(p2);
 
   resultadoDiv.innerHTML = `
     <div>
@@ -88,7 +121,13 @@ function comparar() {
     </div>
 
     <div style="margin-top: 10px; font-weight: bold;">
-      ${score1 > score2 ? "🟢 Producto 1 mejor" : "🟢 Producto 2 mejor"}
+      ${
+        score1 === score2
+          ? "⚖️ Son similares"
+          : score1 > score2
+          ? "🟢 Producto 1 mejor"
+          : "🟢 Producto 2 mejor"
+      }
     </div>
   `;
 }

@@ -33,7 +33,7 @@ function mostrarSugerencias(input, idSugerencias) {
   });
 }
 
-// CALCULAR SCORE
+// SCORE
 function calcularScore(p) {
   return (
     p.proteina
@@ -43,7 +43,28 @@ function calcularScore(p) {
   );
 }
 
-// COMPARAR PRODUCTOS
+// COLOR SEGÚN SCORE
+function getColor(score) {
+  if (score > -5) return "green";
+  if (score > -15) return "orange";
+  return "red";
+}
+
+// EXPLICACIÓN INTELIGENTE
+function generarExplicacion(p1, p2) {
+  let razones = [];
+
+  if (p1.azucar < p2.azucar) razones.push("menos azúcar");
+  if (p1.grasa < p2.grasa) razones.push("menos grasa");
+  if (p1.procesado < p2.procesado) razones.push("menos procesado");
+  if (p1.proteina > p2.proteina) razones.push("más proteína");
+
+  if (razones.length === 0) return "Son bastante similares";
+
+  return "Mejor opción porque tiene " + razones.join(", ");
+}
+
+// COMPARAR
 function comparar() {
   const nombre1 = document.getElementById("producto1").value.toLowerCase();
   const nombre2 = document.getElementById("producto2").value.toLowerCase();
@@ -59,13 +80,21 @@ function comparar() {
   const score1 = calcularScore(p1);
   const score2 = calcularScore(p2);
 
-  let ganador = "";
-  if (score1 > score2) ganador = p1.nombre;
-  else if (score2 > score1) ganador = p2.nombre;
-  else ganador = "Empate";
+  let ganador, explicacion;
+
+  if (score1 > score2) {
+    ganador = p1;
+    explicacion = generarExplicacion(p1, p2);
+  } else if (score2 > score1) {
+    ganador = p2;
+    explicacion = generarExplicacion(p2, p1);
+  } else {
+    ganador = null;
+    explicacion = "Empate: ambos productos son similares";
+  }
 
   document.getElementById("resultado").innerHTML = `
-    <div class="card">
+    <div class="card" style="border-left: 5px solid ${getColor(score1)}">
       <h3>${p1.nombre}</h3>
       Azúcar: ${p1.azucar}g<br>
       Grasa: ${p1.grasa}g<br>
@@ -74,7 +103,7 @@ function comparar() {
       <b>Score: ${score1}</b>
     </div>
 
-    <div class="card">
+    <div class="card" style="border-left: 5px solid ${getColor(score2)}">
       <h3>${p2.nombre}</h3>
       Azúcar: ${p2.azucar}g<br>
       Grasa: ${p2.grasa}g<br>
@@ -83,6 +112,7 @@ function comparar() {
       <b>Score: ${score2}</b>
     </div>
 
-    <h2>🏆 Mejor opción: ${ganador}</h2>
+    <h2>🏆 Mejor opción: ${ganador ? ganador.nombre : "Empate"}</h2>
+    <p>${explicacion}</p>
   `;
 }

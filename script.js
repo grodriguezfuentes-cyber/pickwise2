@@ -7,7 +7,7 @@ fetch('productos.json')
     productos = data;
   });
 
-// AUTOCOMPLETADO INTELIGENTE
+// AUTOCOMPLETADO
 function mostrarSugerencias(input, idSugerencias) {
   const valor = input.value.toLowerCase();
   const contenedor = document.getElementById(idSugerencias);
@@ -44,15 +44,10 @@ function mostrarSugerencias(input, idSugerencias) {
 
 // SCORE
 function calcularScore(p) {
-  return (
-    p.proteina
-    - p.azucar
-    - p.grasa
-    - p.procesado
-  );
+  return p.proteina - p.azucar - p.grasa - p.procesado;
 }
 
-// NOTA A–E
+// NOTA
 function getNota(score) {
   if (score > -5) return "A";
   if (score > -10) return "B";
@@ -61,7 +56,7 @@ function getNota(score) {
   return "E";
 }
 
-// COLOR POR NOTA
+// COLOR
 function getColorNota(nota) {
   switch (nota) {
     case "A": return "green";
@@ -72,18 +67,42 @@ function getColorNota(nota) {
   }
 }
 
-// EXPLICACIÓN
-function generarExplicacion(p1, p2) {
-  let razones = [];
+// 🧠 DIFERENCIAS INTELIGENTES
+function generarDiferencias(p1, p2) {
+  let frases = [];
 
-  if (p1.azucar < p2.azucar) razones.push("menos azúcar");
-  if (p1.grasa < p2.grasa) razones.push("menos grasa");
-  if (p1.procesado < p2.procesado) razones.push("menos procesado");
-  if (p1.proteina > p2.proteina) razones.push("más proteína");
+  function calcularPorcentaje(a, b) {
+    if (b === 0) return 0;
+    return Math.round(((b - a) / b) * 100);
+  }
 
-  if (razones.length === 0) return "Son bastante similares";
+  // Azúcar
+  if (p1.azucar < p2.azucar) {
+    let diff = calcularPorcentaje(p1.azucar, p2.azucar);
+    frases.push(`${diff}% menos azúcar`);
+  }
 
-  return "Mejor opción porque tiene " + razones.join(", ");
+  // Grasa
+  if (p1.grasa < p2.grasa) {
+    let diff = calcularPorcentaje(p1.grasa, p2.grasa);
+    frases.push(`${diff}% menos grasa`);
+  }
+
+  // Procesado
+  if (p1.procesado < p2.procesado) {
+    let diff = calcularPorcentaje(p1.procesado, p2.procesado);
+    frases.push(`${diff}% menos procesado`);
+  }
+
+  // Proteína
+  if (p1.proteina > p2.proteina && p2.proteina !== 0) {
+    let diff = Math.round((p1.proteina / p2.proteina) * 100);
+    frases.push(`${diff}% más proteína`);
+  }
+
+  if (frases.length === 0) return "Son bastante similares";
+
+  return "Destaca porque tiene " + frases.join(", ");
 }
 
 // COMPARAR
@@ -121,10 +140,10 @@ function comparar() {
 
   if (score1 > score2) {
     ganador = p1;
-    explicacion = generarExplicacion(p1, p2);
+    explicacion = generarDiferencias(p1, p2);
   } else if (score2 > score1) {
     ganador = p2;
-    explicacion = generarExplicacion(p2, p1);
+    explicacion = generarDiferencias(p2, p1);
   } else {
     ganador = null;
     explicacion = "Empate: ambos productos son similares";

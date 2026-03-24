@@ -6,7 +6,7 @@ let producto2 = null;
 let timeout = null;
 
 // ==========================
-// 🔍 BUSCAR SUGERENCIAS
+// 🔍 BUSCAR SUGERENCIAS (FIX FINAL)
 // ==========================
 function buscarSugerencias(texto, numero) {
 
@@ -25,18 +25,10 @@ function buscarSugerencias(texto, numero) {
       const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(texto)}&search_simple=1&action=process&json=1&page_size=20`;
 
       const res = await fetch(url);
-
-      if (!res.ok) {
-        contenedor.innerHTML = "";
-        return;
-      }
+      if (!res.ok) return;
 
       const data = await res.json();
-
-      if (!data.products) {
-        contenedor.innerHTML = "";
-        return;
-      }
+      if (!data.products) return;
 
       let productos = data.products
         .filter(p =>
@@ -52,14 +44,26 @@ function buscarSugerencias(texto, numero) {
         return;
       }
 
-      contenedor.innerHTML = productos.map(p => `
-        <div class="sugerencia" onclick='seleccionarProducto(${numero}, ${JSON.stringify(p)})'>
+      // 🔥 RENDER LIMPIO (SIN JSON EN HTML)
+      contenedor.innerHTML = productos.map((p, index) => `
+        <div class="sugerencia" data-index="${index}">
           ${p.product_name}
         </div>
       `).join("");
 
+      // 🔥 GUARDAMOS PRODUCTOS EN MEMORIA
+      contenedor._productos = productos;
+
+      // 🔥 EVENTOS CLICK
+      contenedor.querySelectorAll(".sugerencia").forEach((el) => {
+        el.addEventListener("click", () => {
+          const index = el.getAttribute("data-index");
+          seleccionarProducto(numero, contenedor._productos[index]);
+        });
+      });
+
     } catch (e) {
-      console.warn("La API falló pero seguimos");
+      console.warn("Error silencioso API");
       contenedor.innerHTML = "";
     }
 
@@ -131,7 +135,6 @@ async function buscarProductoPorTexto(nombre) {
     const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(nombre)}&search_simple=1&action=process&json=1&page_size=5`;
 
     const res = await fetch(url);
-
     if (!res.ok) return null;
 
     const data = await res.json();
@@ -163,7 +166,7 @@ async function compararProductos() {
 
   try {
 
-    // 🔥 Permite comparar aunque no selecciones sugerencia
+    // 🔥 FUNCIONA AUNQUE NO SELECCIONES SUGERENCIA
     if (!producto1) producto1 = await buscarProductoPorTexto(input1);
     if (!producto2) producto2 = await buscarProductoPorTexto(input2);
 

@@ -3,42 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <title>PickWise</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      font-family: Arial;
+      background: #f2f2f2;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
     }
 
     .container {
-      width: 100%;
-      max-width: 400px;
       text-align: center;
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 5px;
-    }
-
-    p {
-      color: #666;
-      margin-bottom: 20px;
+      width: 300px;
     }
 
     input {
       width: 100%;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
       border: 1px solid #ccc;
-      font-size: 16px;
     }
 
     button {
@@ -48,77 +33,39 @@
       color: white;
       border: none;
       border-radius: 10px;
-      font-size: 16px;
       cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .sugerencias {
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .sugerencia {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-    }
-
-    .sugerencia:hover {
-      background: #f0f0f0;
-    }
-
-    .card {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-top: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     #resultado {
       margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
-    <h1>PickWise 🛒</h1>
-    <p>Busca y compara productos</p>
+<div class="container">
+  <h1>PickWise 🛒</h1>
+  <p>Busca y compara productos</p>
 
-    <!-- INPUT 1 -->
-    <input 
-      id="barcode1"
-      class="input-busqueda"
-      placeholder="Producto 1"
-      oninput="buscarSugerencias(this.value, 1); resetProducto(1)"
-    >
-    <div id="sugerencias1" class="sugerencias"></div>
+  <input id="producto1" placeholder="Producto 1">
+  <input id="producto2" placeholder="Producto 2">
 
-    <!-- INPUT 2 -->
-    <input 
-      id="barcode2"
-      class="input-busqueda"
-      placeholder="Producto 2"
-      oninput="buscarSugerencias(this.value, 2); resetProducto(2)"
-    >
-    <div id="sugerencias2" class="sugerencias"></div>
+  <button onclick="comparar()">Comparar</button>
 
-    <!-- BOTÓN -->
-    <button onclick="compararProductos()">Comparar</button>
+  <div id="error" class="error"></div>
+  <div id="resultado"></div>
+</div>
 
-    <!-- RESULTADO -->
-    <div id="resultado"></div>
-
-  </div>
-
-  <!-- SCRIPT -->
-  <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>

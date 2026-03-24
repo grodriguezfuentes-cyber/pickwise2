@@ -6,7 +6,7 @@ let producto2 = null;
 let timeout = null;
 
 // ==========================
-// 🔍 BUSCAR SUGERENCIAS (MEJORADO)
+// 🔍 BUSCAR SUGERENCIAS
 // ==========================
 function buscarSugerencias(texto, numero) {
 
@@ -22,20 +22,33 @@ function buscarSugerencias(texto, numero) {
   timeout = setTimeout(async () => {
 
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${texto}&search_simple=1&action=process&json=1&page_size=20`);
+      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(texto)}&search_simple=1&action=process&json=1&page_size=20`;
+
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        contenedor.innerHTML = "";
+        return;
+      }
+
       const data = await res.json();
+
+      if (!data.products) {
+        contenedor.innerHTML = "";
+        return;
+      }
 
       let productos = data.products
         .filter(p =>
           p.product_name &&
-          p.product_name.length < 40 && // 🔥 evita textos largos basura
+          p.product_name.length < 40 &&
           !p.product_name.includes("{") &&
           !p.product_name.includes("ingredients")
         )
-        .slice(0, 6);
+        .slice(0, 5);
 
       if (productos.length === 0) {
-        contenedor.innerHTML = `<div class="sugerencia">No hay resultados</div>`;
+        contenedor.innerHTML = "";
         return;
       }
 
@@ -46,7 +59,8 @@ function buscarSugerencias(texto, numero) {
       `).join("");
 
     } catch (e) {
-      contenedor.innerHTML = `<div class="sugerencia">Error al buscar</div>`;
+      console.warn("La API falló pero seguimos");
+      contenedor.innerHTML = "";
     }
 
   }, 200);
@@ -69,7 +83,7 @@ function seleccionarProducto(numero, producto) {
 }
 
 // ==========================
-// ❌ CERRAR LISTAS
+// ❌ CERRAR SUGERENCIAS
 // ==========================
 function cerrarSugerencias() {
   document.getElementById("sugerencias1").innerHTML = "";
@@ -83,7 +97,7 @@ document.addEventListener("click", function(e) {
 });
 
 // ==========================
-// 🔄 LIMPIAR SELECCIÓN SI EDITAS
+// 🔄 RESET SI EDITA INPUT
 // ==========================
 function resetProducto(numero) {
   if (numero === 1) producto1 = null;
@@ -91,7 +105,7 @@ function resetProducto(numero) {
 }
 
 // ==========================
-// 🧠 SCORE SIMPLE
+// 🧠 CALCULAR SCORE
 // ==========================
 function calcularScore(p) {
 
@@ -109,12 +123,17 @@ function calcularScore(p) {
 }
 
 // ==========================
-// 🔎 BUSCAR PRODUCTO (SIN FALLAR)
+// 🔎 BUSCAR PRODUCTO DIRECTO
 // ==========================
 async function buscarProductoPorTexto(nombre) {
 
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`);
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(nombre)}&search_simple=1&action=process&json=1&page_size=5`;
+
+    const res = await fetch(url);
+
+    if (!res.ok) return null;
+
     const data = await res.json();
 
     return data.products.find(p => p.product_name);
@@ -125,7 +144,7 @@ async function buscarProductoPorTexto(nombre) {
 }
 
 // ==========================
-// ⚔️ COMPARAR
+// ⚔️ COMPARAR PRODUCTOS
 // ==========================
 async function compararProductos() {
 
@@ -144,7 +163,7 @@ async function compararProductos() {
 
   try {
 
-    // 🔥 Si no seleccionó, intentamos buscar igual
+    // 🔥 Permite comparar aunque no selecciones sugerencia
     if (!producto1) producto1 = await buscarProductoPorTexto(input1);
     if (!producto2) producto2 = await buscarProductoPorTexto(input2);
 
@@ -176,6 +195,7 @@ async function compararProductos() {
     `;
 
   } catch (e) {
+    console.error(e);
     resultado.innerHTML = "❌ Error al comparar";
   }
 }

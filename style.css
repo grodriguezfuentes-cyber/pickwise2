@@ -1,69 +1,15 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f2f2f2;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-}
-
-.container {
-  max-width: 420px;
-  width: 100%;
-  padding: 20px;
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-input {
-  width: 100%;
-  padding: 14px;
+.sugerencias {
+  background: white;
+  border-radius: 10px;
   margin-bottom: 10px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  font-size: 16px;
 }
 
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 8px;
-  border: none;
-  border-radius: 12px;
-  background: black;
-  color: white;
-  font-size: 16px;
-  transition: 0.2s;
+.sugerencia {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
 }
 
-button:active {
-  transform: scale(0.97);
-  opacity: 0.8;
-}
-
-.card {
-  background: white;
-  padding: 16px;
-  border-radius: 16px;
-  margin-top: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.card h2 {
-  margin-top: 0;
-}
-
-.resultado-final {
-  background: white;
-  padding: 16px;
-  border-radius: 16px;
-  margin-top: 15px;
-  text-align: center;
-  font-weight: bold;
-}
-
-ul {
-  padding-left: 20px;
+.sugerencia:hover {
+  background: #f5f5f5;
 }

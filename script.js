@@ -1,12 +1,7 @@
-// ==========================
-// 🧠 ESTADO GLOBAL
-// ==========================
 let timeout = null;
-let productoSeleccionado1 = null;
-let productoSeleccionado2 = null;
 
 // ==========================
-// 🔍 BUSCADOR PROFESIONAL
+// 🔍 BUSCADOR
 // ==========================
 function buscarSugerencias(texto, numero) {
 
@@ -28,16 +23,8 @@ function buscarSugerencias(texto, numero) {
       let productos = data.products
         .filter(p =>
           p.product_name &&
-          p.product_name.length < 50 &&
-          !p.product_name.toLowerCase().includes("undefined")
+          p.product_name.length < 50
         );
-
-      // priorizar español
-      productos.sort((a, b) => {
-        const esA = (a.lang || "").includes("es") ? 1 : 0;
-        const esB = (b.lang || "").includes("es") ? 1 : 0;
-        return esB - esA;
-      });
 
       contenedor.innerHTML = productos.slice(0, 5).map(p => `
         <div class="sugerencia" onclick="seleccionarProducto(${numero}, '${p.product_name.replace(/'/g, "")}')">
@@ -46,52 +33,50 @@ function buscarSugerencias(texto, numero) {
       `).join("");
 
     } catch (e) {
-      console.error("Error buscando:", e);
+      console.error(e);
     }
 
   }, 300);
 }
 
 // ==========================
-// 📌 SELECCIÓN CONTROLADA
+// 📌 SELECCIONAR
 // ==========================
 function seleccionarProducto(numero, nombre) {
 
   const input = document.getElementById("barcode" + numero);
   input.value = nombre;
 
-  if (numero === 1) productoSeleccionado1 = nombre;
-  if (numero === 2) productoSeleccionado2 = nombre;
+  input.style.border = "2px solid green";
 
   cerrarSugerencias();
 }
 
 // ==========================
-// ❌ CERRAR SUGERENCIAS
+// ❌ CERRAR
 // ==========================
 function cerrarSugerencias() {
   document.getElementById("sugerencias1").innerHTML = "";
   document.getElementById("sugerencias2").innerHTML = "";
 }
 
-// click fuera
 document.addEventListener("click", function(e) {
   if (!e.target.classList.contains("input-busqueda")) {
     cerrarSugerencias();
   }
 });
 
-// escribir invalida selección previa
-document.getElementById("barcode1").addEventListener("input", () => {
-  productoSeleccionado1 = null;
+// reset visual
+document.getElementById("barcode1").addEventListener("input", function() {
+  this.style.border = "2px solid #ccc";
 });
 
-document.getElementById("barcode2").addEventListener("input", () => {
-  productoSeleccionado2 = null;
+document.getElementById("barcode2").addEventListener("input", function() {
+  this.style.border = "2px solid #ccc";
 });
 
 // ==========================
-// 🔎 BUSCAR PRODUCTO ROBUSTO
+// 🔎 BUSCAR PRODUCTO (CLAVE)
 // ==========================
 async function buscarProducto(nombre) {
 
@@ -101,11 +86,11 @@ async function buscarProducto(nombre) {
   return data.products.find(p =>
     p.product_name &&
     p.nutriments
-  );
+  ) || data.products[0];
 }
 
 // ==========================
-// 🧠 SCORE SIMPLE (BASE)
+// 🧠 SCORE
 // ==========================
 function calcularScore(p) {
 
@@ -120,17 +105,19 @@ function calcularScore(p) {
 }
 
 // ==========================
-// ⚔️ COMPARACIÓN PRO
+// ⚔️ COMPARAR (SIN BLOQUEOS)
 // ==========================
 async function compararProductos() {
 
   cerrarSugerencias();
 
+  const n1 = document.getElementById("barcode1").value.trim();
+  const n2 = document.getElementById("barcode2").value.trim();
+
   const resultado = document.getElementById("resultado");
 
-  // 🚨 VALIDACIÓN PRO
-  if (!productoSeleccionado1 || !productoSeleccionado2) {
-    resultado.innerHTML = "⚠️ Selecciona productos de la lista";
+  if (!n1 || !n2) {
+    resultado.innerHTML = "⚠️ Escribe ambos productos";
     return;
   }
 
@@ -138,11 +125,11 @@ async function compararProductos() {
 
   try {
 
-    const p1 = await buscarProducto(productoSeleccionado1);
-    const p2 = await buscarProducto(productoSeleccionado2);
+    const p1 = await buscarProducto(n1);
+    const p2 = await buscarProducto(n2);
 
     if (!p1 || !p2) {
-      resultado.innerHTML = "❌ No se encontraron datos fiables";
+      resultado.innerHTML = "❌ No se encontraron productos";
       return;
     }
 
@@ -170,6 +157,6 @@ async function compararProductos() {
 
   } catch (e) {
     console.error(e);
-    resultado.innerHTML = "❌ Error real al comparar";
+    resultado.innerHTML = "❌ Error al comparar";
   }
 }

@@ -2,39 +2,39 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>PickWise MVP</title>
+  <title>PickWise</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>PickWise 🛒</h1>
-  <p>Escribe el nombre del producto</p>
+  <div class="container">
+    <h1>PickWise 🛒</h1>
+    <p>Busca y selecciona productos</p>
 
-  <!-- INPUT 1 -->
-  <input 
-    type="text" 
-    id="barcode1" 
-    class="input-busqueda"
-    placeholder="Ej: Nutella"
-    oninput="buscarSugerencias(this.value, 1)"
-  >
-  <div id="sugerencias1" class="sugerencias"></div>
+    <!-- INPUT 1 -->
+    <input 
+      type="text" 
+      id="barcode1" 
+      class="input-busqueda"
+      placeholder="Busca y selecciona producto 1"
+      oninput="buscarSugerencias(this.value, 1)"
+    >
+    <div id="sugerencias1" class="sugerencias"></div>
 
-  <!-- INPUT 2 -->
-  <input 
-    type="text" 
-    id="barcode2" 
-    class="input-busqueda"
-    placeholder="Ej: Coca Cola"
-    oninput="buscarSugerencias(this.value, 2)"
-  >
-  <div id="sugerencias2" class="sugerencias"></div>
+    <!-- INPUT 2 -->
+    <input 
+      type="text" 
+      id="barcode2" 
+      class="input-busqueda"
+      placeholder="Busca y selecciona producto 2"
+      oninput="buscarSugerencias(this.value, 2)"
+    >
+    <div id="sugerencias2" class="sugerencias"></div>
 
-  <!-- BOTÓN -->
-  <button onclick="compararProductos()">Comparar</button>
+    <button onclick="compararProductos()">Comparar</button>
 
-  <!-- RESULTADO -->
-  <div id="resultado"></div>
+    <div id="resultado"></div>
+  </div>
 
   <script src="script.js"></script>
 

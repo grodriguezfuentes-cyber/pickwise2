@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PickWise</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- icono app -->
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/263/263142.png">
+
+  <!-- mejor experiencia móvil -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="container">
+
+  <h1>PickWise 🛒</h1>
+
+  <p style="text-align:center; color:#666;">
+    Escribe el nombre o código del producto
+  </p>
+
+  <!-- PRODUCTO 1 -->
+  <input 
+    type="text" 
+    id="barcode1" 
+    placeholder="Ej: Nutella"
+    oninput="buscarSugerencias(this.value, 1)"
+  >
+  <div id="sugerencias1" class="sugerencias"></div>
+
+  <!-- PRODUCTO 2 -->
+  <input 
+    type="text" 
+    id="barcode2" 
+    placeholder="Ej: Coca Cola"
+    oninput="buscarSugerencias(this.value, 2)"
+  >
+  <div id="sugerencias2" class="sugerencias"></div>
+
+  <!-- BOTÓN -->
+  <button onclick="compararProductos()">Comparar</button>
+
+  <!-- RESULTADO -->
+  <div id="resultado"></div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

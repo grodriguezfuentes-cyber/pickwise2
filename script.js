@@ -1,3 +1,8 @@
+// ==========================
+// 🧠 ESTADO GLOBAL
+// ==========================
+let producto1 = null;
+let producto2 = null;
 let timeout = null;
 
 // ==========================
@@ -23,7 +28,7 @@ function buscarSugerencias(texto, numero) {
       let productos = data.products.filter(p => p.product_name);
 
       contenedor.innerHTML = productos.slice(0, 5).map(p => `
-        <div class="sugerencia" onclick="seleccionarProducto(${numero}, '${p.product_name.replace(/'/g, "")}')">
+        <div class="sugerencia" onclick='seleccionarProducto(${numero}, ${JSON.stringify(p)})'>
           ${p.product_name}
         </div>
       `).join("");
@@ -36,15 +41,23 @@ function buscarSugerencias(texto, numero) {
 }
 
 // ==========================
-// 📌 SELECCIONAR
+// 📌 SELECCIONAR PRODUCTO REAL
 // ==========================
-function seleccionarProducto(numero, nombre) {
-  document.getElementById("barcode" + numero).value = nombre;
+function seleccionarProducto(numero, producto) {
+
+  if (numero === 1) {
+    producto1 = producto;
+    document.getElementById("barcode1").value = producto.product_name;
+  } else {
+    producto2 = producto;
+    document.getElementById("barcode2").value = producto.product_name;
+  }
+
   cerrarSugerencias();
 }
 
 // ==========================
-// ❌ CERRAR
+// ❌ CERRAR SUGERENCIAS
 // ==========================
 function cerrarSugerencias() {
   document.getElementById("sugerencias1").innerHTML = "";
@@ -58,23 +71,11 @@ document.addEventListener("click", function(e) {
 });
 
 // ==========================
-// 🔎 BUSCAR PRODUCTO (FIX)
-// ==========================
-async function buscarProducto(nombre) {
-
-  const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`);
-  const data = await res.json();
-
-  // 🔥 fallback inteligente
-  return data.products.find(p => p.product_name) || data.products[0];
-}
-
-// ==========================
-// 🧠 SCORE (SEGURO)
+// 🧠 SCORE SEGURO
 // ==========================
 function calcularScore(p) {
 
-  if (!p || !p.nutriments) return 5; // valor neutro
+  if (!p || !p.nutriments) return 5;
 
   const n = p.nutriments;
 
@@ -88,58 +89,39 @@ function calcularScore(p) {
 }
 
 // ==========================
-// ⚔️ COMPARAR (ROBUSTO)
+// ⚔️ COMPARAR REAL
 // ==========================
-async function compararProductos() {
+function compararProductos() {
 
   cerrarSugerencias();
 
-  const n1 = document.getElementById("barcode1").value.trim();
-  const n2 = document.getElementById("barcode2").value.trim();
-
   const resultado = document.getElementById("resultado");
 
-  if (!n1 || !n2) {
-    resultado.innerHTML = "⚠️ Escribe ambos productos";
+  // 🚨 VALIDACIÓN REAL
+  if (!producto1 || !producto2) {
+    resultado.innerHTML = "⚠️ Debes seleccionar productos de la lista";
     return;
   }
 
-  resultado.innerHTML = "Comparando...";
+  const s1 = calcularScore(producto1);
+  const s2 = calcularScore(producto2);
 
-  try {
+  let ganador = "";
+  if (s1 > s2) ganador = "🟢 Producto 1 mejor";
+  else if (s2 > s1) ganador = "🟢 Producto 2 mejor";
+  else ganador = "🟡 Empate";
 
-    const p1 = await buscarProducto(n1);
-    const p2 = await buscarProducto(n2);
+  resultado.innerHTML = `
+    <div class="card">
+      <h3>${producto1.product_name}</h3>
+      <p>Score: ${s1}/10</p>
+    </div>
 
-    if (!p1 || !p2) {
-      resultado.innerHTML = "❌ No se encontraron productos";
-      return;
-    }
+    <div class="card">
+      <h3>${producto2.product_name}</h3>
+      <p>Score: ${s2}/10</p>
+    </div>
 
-    const s1 = calcularScore(p1);
-    const s2 = calcularScore(p2);
-
-    let ganador = "";
-    if (s1 > s2) ganador = "🟢 Producto 1 mejor";
-    else if (s2 > s1) ganador = "🟢 Producto 2 mejor";
-    else ganador = "🟡 Empate";
-
-    resultado.innerHTML = `
-      <div class="card">
-        <h3>${p1.product_name || "Producto 1"}</h3>
-        <p>Score: ${s1}/10</p>
-      </div>
-
-      <div class="card">
-        <h3>${p2.product_name || "Producto 2"}</h3>
-        <p>Score: ${s2}/10</p>
-      </div>
-
-      <h2>${ganador}</h2>
-    `;
-
-  } catch (e) {
-    console.error(e);
-    resultado.innerHTML = "❌ Error al comparar";
-  }
+    <h2>${ganador}</h2>
+  `;
 }

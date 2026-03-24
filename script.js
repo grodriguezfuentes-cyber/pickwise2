@@ -1,5 +1,5 @@
 // ==========================
-// 🧠 ESTADO GLOBAL
+// 🧠 ESTADO
 // ==========================
 let producto1 = null;
 let producto2 = null;
@@ -41,7 +41,7 @@ function buscarSugerencias(texto, numero) {
 }
 
 // ==========================
-// 📌 SELECCIONAR PRODUCTO REAL
+// 📌 SELECCIONAR
 // ==========================
 function seleccionarProducto(numero, producto) {
 
@@ -57,21 +57,15 @@ function seleccionarProducto(numero, producto) {
 }
 
 // ==========================
-// ❌ CERRAR SUGERENCIAS
+// ❌ CERRAR
 // ==========================
 function cerrarSugerencias() {
   document.getElementById("sugerencias1").innerHTML = "";
   document.getElementById("sugerencias2").innerHTML = "";
 }
 
-document.addEventListener("click", function(e) {
-  if (!e.target.classList.contains("input-busqueda")) {
-    cerrarSugerencias();
-  }
-});
-
 // ==========================
-// 🧠 SCORE SEGURO
+// 🧠 SCORE
 // ==========================
 function calcularScore(p) {
 
@@ -89,39 +83,75 @@ function calcularScore(p) {
 }
 
 // ==========================
-// ⚔️ COMPARAR REAL
+// 🔎 BUSCAR POR TEXTO (NUEVO)
 // ==========================
-function compararProductos() {
+async function buscarProductoPorTexto(nombre) {
+
+  const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=1`);
+  const data = await res.json();
+
+  return data.products[0];
+}
+
+// ==========================
+// ⚔️ COMPARAR (ULTRA ROBUSTO)
+// ==========================
+async function compararProductos() {
 
   cerrarSugerencias();
 
+  const input1 = document.getElementById("barcode1").value.trim();
+  const input2 = document.getElementById("barcode2").value.trim();
+
   const resultado = document.getElementById("resultado");
 
-  // 🚨 VALIDACIÓN REAL
-  if (!producto1 || !producto2) {
-    resultado.innerHTML = "⚠️ Debes seleccionar productos de la lista";
+  if (!input1 || !input2) {
+    resultado.innerHTML = "⚠️ Escribe ambos productos";
     return;
   }
 
-  const s1 = calcularScore(producto1);
-  const s2 = calcularScore(producto2);
+  resultado.innerHTML = "Comparando...";
 
-  let ganador = "";
-  if (s1 > s2) ganador = "🟢 Producto 1 mejor";
-  else if (s2 > s1) ganador = "🟢 Producto 2 mejor";
-  else ganador = "🟡 Empate";
+  try {
 
-  resultado.innerHTML = `
-    <div class="card">
-      <h3>${producto1.product_name}</h3>
-      <p>Score: ${s1}/10</p>
-    </div>
+    // 🔥 CLAVE: fallback inteligente
+    if (!producto1) {
+      producto1 = await buscarProductoPorTexto(input1);
+    }
 
-    <div class="card">
-      <h3>${producto2.product_name}</h3>
-      <p>Score: ${s2}/10</p>
-    </div>
+    if (!producto2) {
+      producto2 = await buscarProductoPorTexto(input2);
+    }
 
-    <h2>${ganador}</h2>
-  `;
+    if (!producto1 || !producto2) {
+      resultado.innerHTML = "❌ No se encontraron productos";
+      return;
+    }
+
+    const s1 = calcularScore(producto1);
+    const s2 = calcularScore(producto2);
+
+    let ganador = "";
+    if (s1 > s2) ganador = "🟢 Producto 1 mejor";
+    else if (s2 > s1) ganador = "🟢 Producto 2 mejor";
+    else ganador = "🟡 Empate";
+
+    resultado.innerHTML = `
+      <div class="card">
+        <h3>${producto1.product_name}</h3>
+        <p>Score: ${s1}/10</p>
+      </div>
+
+      <div class="card">
+        <h3>${producto2.product_name}</h3>
+        <p>Score: ${s2}/10</p>
+      </div>
+
+      <h2>${ganador}</h2>
+    `;
+
+  } catch (e) {
+    console.error(e);
+    resultado.innerHTML = "❌ Error al comparar";
+  }
 }

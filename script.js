@@ -1,12 +1,12 @@
 // ==========================
-// ESTADO GLOBAL
+// 🧠 ESTADO GLOBAL
 // ==========================
 let producto1 = null;
 let producto2 = null;
 let timeout = null;
 
 // ==========================
-// BUSCAR SUGERENCIAS
+// 🔍 BUSCAR SUGERENCIAS
 // ==========================
 function buscarSugerencias(texto, numero) {
 
@@ -47,7 +47,7 @@ function buscarSugerencias(texto, numero) {
 }
 
 // ==========================
-// SELECCIONAR PRODUCTO
+// 📌 SELECCIONAR PRODUCTO
 // ==========================
 function seleccionarProducto(numero, producto) {
 
@@ -63,7 +63,7 @@ function seleccionarProducto(numero, producto) {
 }
 
 // ==========================
-// CERRAR SUGERENCIAS
+// ❌ CERRAR SUGERENCIAS
 // ==========================
 function cerrarSugerencias() {
   document.getElementById("sugerencias1").innerHTML = "";
@@ -77,7 +77,7 @@ document.addEventListener("click", function(e) {
 });
 
 // ==========================
-// SCORE
+// 🧠 SCORE
 // ==========================
 function calcularScore(p) {
 
@@ -95,18 +95,51 @@ function calcularScore(p) {
 }
 
 // ==========================
-// BUSCAR POR TEXTO (FALLBACK)
+// 🌍 TRADUCCIÓN BÁSICA
 // ==========================
-async function buscarProductoPorTexto(nombre) {
+function traducir(texto) {
 
-  const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=1`);
-  const data = await res.json();
+  const diccionario = {
+    "sandia": "watermelon",
+    "melocoton": "peach",
+    "platano": "banana",
+    "naranja": "orange",
+    "manzana": "apple"
+  };
 
-  return data.products[0];
+  return diccionario[texto.toLowerCase()] || texto;
 }
 
 // ==========================
-// COMPARAR
+// 🔎 BUSCAR PRODUCTO (ROBUSTO)
+// ==========================
+async function buscarProductoPorTexto(nombre) {
+
+  try {
+    // intento normal
+    let res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`);
+    let data = await res.json();
+
+    let producto = data.products.find(p => p.product_name);
+
+    if (producto) return producto;
+
+    // fallback en inglés
+    let nombreTraducido = traducir(nombre);
+
+    let res2 = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombreTraducido}&search_simple=1&action=process&json=1&page_size=5`);
+    let data2 = await res2.json();
+
+    return data2.products.find(p => p.product_name);
+
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// ==========================
+// ⚔️ COMPARAR
 // ==========================
 async function compararProductos() {
 

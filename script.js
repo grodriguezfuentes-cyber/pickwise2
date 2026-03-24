@@ -8,10 +8,10 @@ const listaEjemplo = [
   "Doritos",
   "Leche",
   "Pan",
-  "Queso"
+  "Queso",
+  "Melocoton"
 ];
 
-// BASE DE DATOS SIMPLE (simulación real)
 const datosProductos = {
   "coca cola": { azucar: 10, grasa: 0, proteina: 0 },
   "pepsi": { azucar: 11, grasa: 0, proteina: 0 },
@@ -22,7 +22,8 @@ const datosProductos = {
   "doritos": { azucar: 3, grasa: 30, proteina: 6 },
   "leche": { azucar: 5, grasa: 3, proteina: 3 },
   "pan": { azucar: 4, grasa: 1, proteina: 8 },
-  "queso": { azucar: 1, grasa: 33, proteina: 25 }
+  "queso": { azucar: 1, grasa: 33, proteina: 25 },
+  "melocoton": { azucar: 8, grasa: 0, proteina: 1 }
 };
 
 // AUTOCOMPLETE
@@ -70,23 +71,34 @@ function mostrarSugerencias(inputId) {
 mostrarSugerencias("producto1");
 mostrarSugerencias("producto2");
 
-// FUNCIÓN DE SCORING REAL
+// SCORE
 function calcularScore(p) {
-  if (!p) return 0;
-
   let score = 10;
-
   score -= p.azucar * 0.1;
   score -= p.grasa * 0.1;
   score += p.proteina * 0.2;
-
   return Math.max(1, Math.min(10, Math.round(score)));
+}
+
+// GENERAR SCORE SI NO EXISTE
+function generarScoreGenerico(nombre) {
+  nombre = nombre.toLowerCase();
+
+  // heurística básica
+  if (nombre.includes("chocolate") || nombre.includes("galleta")) {
+    return 3;
+  }
+  if (nombre.includes("fruta") || nombre.includes("melon") || nombre.includes("manzana")) {
+    return 8;
+  }
+
+  return 5; // neutro
 }
 
 // COMPARAR
 function comparar() {
-  const input1 = document.getElementById("producto1").value.toLowerCase().trim();
-  const input2 = document.getElementById("producto2").value.toLowerCase().trim();
+  const input1 = document.getElementById("producto1").value.trim().toLowerCase();
+  const input2 = document.getElementById("producto2").value.trim().toLowerCase();
   const errorDiv = document.getElementById("error");
   const resultadoDiv = document.getElementById("resultado");
 
@@ -101,13 +113,8 @@ function comparar() {
   const p1 = datosProductos[input1];
   const p2 = datosProductos[input2];
 
-  if (!p1 || !p2) {
-    errorDiv.textContent = "Producto no reconocido (usa sugerencias)";
-    return;
-  }
-
-  const score1 = calcularScore(p1);
-  const score2 = calcularScore(p2);
+  const score1 = p1 ? calcularScore(p1) : generarScoreGenerico(input1);
+  const score2 = p2 ? calcularScore(p2) : generarScoreGenerico(input2);
 
   resultadoDiv.innerHTML = `
     <div>

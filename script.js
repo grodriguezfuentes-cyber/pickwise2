@@ -4,8 +4,12 @@
 let baseDatos = [];
 
 async function cargarBaseDatos() {
-  const res = await fetch("productos.json");
-  baseDatos = await res.json();
+  try {
+    const res = await fetch("productos.json");
+    baseDatos = await res.json();
+  } catch (e) {
+    console.error("Error cargando base de datos");
+  }
 }
 
 // ==========================
@@ -20,26 +24,33 @@ function buscarProducto(nombre) {
 }
 
 // ==========================
-// 🧠 SCORE MEJORADO (REAL)
+// 🧠 SCORE TIPO YUKA (0–100)
 // ==========================
 function calcularScore(p) {
-  let score = 10;
+  let score = 100;
 
-  // penalizaciones más realistas
-  score -= p.azucar * 0.25;
-  score -= p.grasa * 0.2;
+  // Penalizaciones
+  score -= p.azucar * 2;
+  score -= p.grasa * 1.5;
+  score -= p.procesado * 5;
 
-  // proteína suma pero poco
-  score += p.proteina * 0.15;
+  // Bonus pequeño
+  score += p.proteina * 1;
 
-  // penalización fuerte a ultraprocesado
-  score -= p.procesado * 0.4;
-
-  return Math.max(1, Math.min(10, Math.round(score)));
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 // ==========================
-// 🧠 GENERADOR INTELIGENTE
+// 🟢🔴 CLASIFICACIÓN
+// ==========================
+function clasificar(score) {
+  if (score >= 70) return { texto: "🟢 Bueno", color: "green" };
+  if (score >= 40) return { texto: "🟡 Regular", color: "orange" };
+  return { texto: "🔴 Malo", color: "red" };
+}
+
+// ==========================
+// 🧠 GENERADOR SI NO EXISTE
 // ==========================
 function generarProducto(nombre) {
   nombre = nombre.toLowerCase();
@@ -92,7 +103,7 @@ function explicar(p1, p2) {
 // ==========================
 // ⚔️ COMPARAR
 // ==========================
-async function comparar() {
+function comparar() {
 
   const input1 = document.getElementById("producto1").value.trim();
   const input2 = document.getElementById("producto2").value.trim();
@@ -113,6 +124,9 @@ async function comparar() {
   const score1 = calcularScore(p1);
   const score2 = calcularScore(p2);
 
+  const c1 = clasificar(score1);
+  const c2 = clasificar(score2);
+
   let mejor = "";
   if (score1 === score2) mejor = "⚖️ Son similares";
   else if (score1 > score2) mejor = "🟢 Producto 1 mejor";
@@ -123,12 +137,16 @@ async function comparar() {
   resultadoDiv.innerHTML = `
     <div>
       <h3>${input1}</h3>
-      <p>Score: ${score1}/10</p>
+      <p style="color:${c1.color}; font-weight:bold;">
+        ${c1.texto} (${score1}/100)
+      </p>
     </div>
 
     <div>
       <h3>${input2}</h3>
-      <p>Score: ${score2}/10</p>
+      <p style="color:${c2.color}; font-weight:bold;">
+        ${c2.texto} (${score2}/100)
+      </p>
     </div>
 
     <div style="margin-top:10px;font-weight:bold;">

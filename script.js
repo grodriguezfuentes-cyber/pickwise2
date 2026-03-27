@@ -1,13 +1,41 @@
 let productos = [];
 
-// Cargar productos
+// Cargar productos locales
 fetch('productos.json')
   .then(res => res.json())
   .then(data => {
     productos = data;
   });
 
-// AUTOCOMPLETADO
+
+// 🔗 FUNCIÓN API (Open Food Facts)
+async function buscarProductoAPI(nombre) {
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1`);
+    const data = await res.json();
+
+    if (!data.products || data.products.length === 0) return null;
+
+    const prod = data.products[0];
+
+    return {
+      nombre: nombre,
+      categoria: "otro",
+
+      azucar: prod.nutriments?.sugars_100g || 0,
+      grasa: prod.nutriments?.fat_100g || 0,
+      proteina: prod.nutriments?.proteins_100g || 0,
+      procesado: prod.nova_group || 5
+    };
+
+  } catch (error) {
+    console.error("Error API:", error);
+    return null;
+  }
+}
+
+
+// 🔎 AUTOCOMPLETADO
 function mostrarSugerencias(input, idSugerencias) {
   const valor = input.value.toLowerCase();
   const contenedor = document.getElementById(idSugerencias);
@@ -19,6 +47,7 @@ function mostrarSugerencias(input, idSugerencias) {
     p.nombre.toLowerCase().includes(valor)
   );
 
+  // Filtrar por categoría en producto2
   if (idSugerencias === "sug2") {
     const nombre1 = document.getElementById("producto1").value.toLowerCase();
     const p1 = productos.find(p => p.nombre === nombre1);
@@ -42,12 +71,14 @@ function mostrarSugerencias(input, idSugerencias) {
   });
 }
 
-// SCORE
+
+// 🧠 SCORE
 function calcularScore(p) {
   return p.proteina - p.azucar - p.grasa - p.procesado;
 }
 
-// NOTA
+
+// ⭐ NOTA
 function getNota(score) {
   if (score > -5) return "A";
   if (score > -10) return "B";
@@ -56,7 +87,8 @@ function getNota(score) {
   return "E";
 }
 
-// COLOR
+
+// 🎨 COLOR
 function getColorNota(nota) {
   switch (nota) {
     case "A": return "green";
@@ -67,7 +99,8 @@ function getColorNota(nota) {
   }
 }
 
-// DIFERENCIAS
+
+// 📊 DIFERENCIAS INTELIGENTES
 function generarDiferencias(p1, p2) {
   let frases = [];
 
@@ -77,23 +110,19 @@ function generarDiferencias(p1, p2) {
   }
 
   if (p1.azucar < p2.azucar) {
-    let diff = calcularPorcentaje(p1.azucar, p2.azucar);
-    frases.push(`${diff}% menos azúcar`);
+    frases.push(`${calcularPorcentaje(p1.azucar, p2.azucar)}% menos azúcar`);
   }
 
   if (p1.grasa < p2.grasa) {
-    let diff = calcularPorcentaje(p1.grasa, p2.grasa);
-    frases.push(`${diff}% menos grasa`);
+    frases.push(`${calcularPorcentaje(p1.grasa, p2.grasa)}% menos grasa`);
   }
 
   if (p1.procesado < p2.procesado) {
-    let diff = calcularPorcentaje(p1.procesado, p2.procesado);
-    frases.push(`${diff}% menos procesado`);
+    frases.push(`${calcularPorcentaje(p1.procesado, p2.procesado)}% menos procesado`);
   }
 
   if (p1.proteina > p2.proteina && p2.proteina !== 0) {
-    let diff = Math.round((p1.proteina / p2.proteina) * 100);
-    frases.push(`${diff}% más proteína`);
+    frases.push(`${Math.round((p1.proteina / p2.proteina) * 100)}% más proteína`);
   }
 
   if (frases.length === 0) return "Son bastante similares";
@@ -101,7 +130,8 @@ function generarDiferencias(p1, p2) {
   return "Destaca porque tiene " + frases.join(", ");
 }
 
-// 🧠 CONSEJO INTELIGENTE
+
+// 🧠 CONSEJO
 function generarConsejo(p) {
   if (p.procesado >= 8) {
     return "⚠️ Es un producto ultraprocesado. Mejor consumir ocasionalmente.";
@@ -122,20 +152,31 @@ function generarConsejo(p) {
   return "👉 Consumo moderado recomendado.";
 }
 
-// COMPARAR
-function comparar() {
+
+// 🔍 COMPARAR (AHORA ASYNC)
+async function comparar() {
   const nombre1 = document.getElementById("producto1").value.toLowerCase();
   const nombre2 = document.getElementById("producto2").value.toLowerCase();
 
-  const p1 = productos.find(p => p.nombre === nombre1);
-  const p2 = productos.find(p => p.nombre === nombre2);
+  let p1 = productos.find(p => p.nombre === nombre1);
+  let p2 = productos.find(p => p.nombre === nombre2);
+
+  // 🔗 Buscar en API si no existe
+  if (!p1) {
+    p1 = await buscarProductoAPI(nombre1);
+  }
+
+  if (!p2) {
+    p2 = await buscarProductoAPI(nombre2);
+  }
 
   if (!p1 || !p2) {
     document.getElementById("resultado").innerHTML = "❌ Productos no encontrados";
     return;
   }
 
-  if (p1.categoria !== p2.categoria) {
+  // 🚫 Validación categoría
+  if (p1.categoria !== p2.categoria && p1.categoria !== "otro" && p2.categoria !== "otro") {
     document.getElementById("resultado").innerHTML = `
       <div class="card">
         ⚠️ No puedes comparar estos productos<br><br>

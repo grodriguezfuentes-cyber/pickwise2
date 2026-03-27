@@ -67,7 +67,7 @@ function getColorNota(nota) {
   }
 }
 
-// 🧠 DIFERENCIAS INTELIGENTES
+// DIFERENCIAS
 function generarDiferencias(p1, p2) {
   let frases = [];
 
@@ -76,25 +76,21 @@ function generarDiferencias(p1, p2) {
     return Math.round(((b - a) / b) * 100);
   }
 
-  // Azúcar
   if (p1.azucar < p2.azucar) {
     let diff = calcularPorcentaje(p1.azucar, p2.azucar);
     frases.push(`${diff}% menos azúcar`);
   }
 
-  // Grasa
   if (p1.grasa < p2.grasa) {
     let diff = calcularPorcentaje(p1.grasa, p2.grasa);
     frases.push(`${diff}% menos grasa`);
   }
 
-  // Procesado
   if (p1.procesado < p2.procesado) {
     let diff = calcularPorcentaje(p1.procesado, p2.procesado);
     frases.push(`${diff}% menos procesado`);
   }
 
-  // Proteína
   if (p1.proteina > p2.proteina && p2.proteina !== 0) {
     let diff = Math.round((p1.proteina / p2.proteina) * 100);
     frases.push(`${diff}% más proteína`);
@@ -103,6 +99,27 @@ function generarDiferencias(p1, p2) {
   if (frases.length === 0) return "Son bastante similares";
 
   return "Destaca porque tiene " + frases.join(", ");
+}
+
+// 🧠 CONSEJO INTELIGENTE
+function generarConsejo(p) {
+  if (p.procesado >= 8) {
+    return "⚠️ Es un producto ultraprocesado. Mejor consumir ocasionalmente.";
+  }
+
+  if (p.azucar > 20) {
+    return "⚠️ Alto en azúcar. No recomendable para consumo frecuente.";
+  }
+
+  if (p.proteina > 15 && p.procesado < 5) {
+    return "✅ Buena opción para una dieta equilibrada.";
+  }
+
+  if (p.procesado <= 2) {
+    return "✅ Producto natural. Muy buena elección.";
+  }
+
+  return "👉 Consumo moderado recomendado.";
 }
 
 // COMPARAR
@@ -149,6 +166,8 @@ function comparar() {
     explicacion = "Empate: ambos productos son similares";
   }
 
+  const consejo = ganador ? generarConsejo(ganador) : "";
+
   document.getElementById("resultado").innerHTML = `
     <div class="card" style="border-left: 10px solid ${getColorNota(nota1)}">
       <h3>${p1.nombre}</h3>
@@ -170,5 +189,6 @@ function comparar() {
 
     <h2>🏆 Mejor opción: ${ganador ? ganador.nombre : "Empate"}</h2>
     <p>${explicacion}</p>
+    <p><b>${consejo}</b></p>
   `;
 }

@@ -16,15 +16,23 @@ async function buscarProductoAPI(nombre) {
 
     if (!data.products || data.products.length === 0) return null;
 
-    const prod = data.products[0];
+    // 🔥 Buscar el primer producto con datos válidos
+    const prod = data.products.find(p =>
+      p.nutriments &&
+      (p.nutriments.sugars_100g !== undefined ||
+       p.nutriments.fat_100g !== undefined ||
+       p.nutriments.proteins_100g !== undefined)
+    );
+
+    if (!prod) return null;
 
     return {
-      nombre: nombre,
+      nombre: prod.product_name || nombre,
       categoria: "otro",
 
-      azucar: prod.nutriments?.sugars_100g || 0,
-      grasa: prod.nutriments?.fat_100g || 0,
-      proteina: prod.nutriments?.proteins_100g || 0,
+      azucar: prod.nutriments.sugars_100g || 0,
+      grasa: prod.nutriments.fat_100g || 0,
+      proteina: prod.nutriments.proteins_100g || 0,
       procesado: prod.nova_group || 5
     };
 
@@ -33,7 +41,6 @@ async function buscarProductoAPI(nombre) {
     return null;
   }
 }
-
 
 // 🔎 AUTOCOMPLETADO
 function mostrarSugerencias(input, idSugerencias) {

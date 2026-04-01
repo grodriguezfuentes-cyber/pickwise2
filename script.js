@@ -8,7 +8,7 @@ fetch('productos.json')
   });
 
 
-// 🔗 FUNCIÓN API (robusta)
+// 🔗 FUNCIÓN API MEJORADA
 async function buscarProductoAPI(nombre) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1`);
@@ -16,20 +16,18 @@ async function buscarProductoAPI(nombre) {
 
     if (!data.products || data.products.length === 0) return null;
 
-    let prod = null;
+    // 🔥 Elegir el producto con más datos nutricionales
+    const productosValidos = data.products
+      .map(p => ({
+        producto: p,
+        score:
+          (p.nutriments?.sugars_100g ? 1 : 0) +
+          (p.nutriments?.fat_100g ? 1 : 0) +
+          (p.nutriments?.proteins_100g ? 1 : 0)
+      }))
+      .sort((a, b) => b.score - a.score);
 
-    // Intentar encontrar producto con datos
-    prod = data.products.find(p =>
-      p.nutriments &&
-      (p.nutriments.sugars_100g !== undefined ||
-       p.nutriments.fat_100g !== undefined ||
-       p.nutriments.proteins_100g !== undefined)
-    );
-
-    // Si no hay, usar el primero
-    if (!prod) {
-      prod = data.products[0];
-    }
+    const prod = productosValidos[0].producto;
 
     return {
       nombre: prod.product_name || nombre,
@@ -60,6 +58,7 @@ function mostrarSugerencias(input, idSugerencias) {
     p.nombre.toLowerCase().includes(valor)
   );
 
+  // Filtrar categoría en producto 2
   if (idSugerencias === "sug2") {
     const nombre1 = document.getElementById("producto1").value.toLowerCase();
     const p1 = productos.find(p => p.nombre === nombre1);
@@ -165,7 +164,7 @@ function generarConsejo(p) {
 }
 
 
-// 🔍 COMPARAR (FINAL, SIN ERRORES)
+// 🔍 COMPARAR (FINAL)
 async function comparar() {
   const nombre1 = document.getElementById("producto1").value.toLowerCase();
   const nombre2 = document.getElementById("producto2").value.toLowerCase();
@@ -182,7 +181,7 @@ async function comparar() {
     p2 = await buscarProductoAPI(nombre2);
   }
 
-  // 🔥 FALLBACK (NUNCA FALLA)
+  // 🔥 FALLBACK (nunca falla)
   if (!p1) {
     p1 = {
       nombre: nombre1,

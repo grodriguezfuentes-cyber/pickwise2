@@ -177,10 +177,27 @@ async function comparar() {
     p2 = await buscarProductoAPI(nombre2);
   }
 
-  if (!p1 || !p2) {
-    document.getElementById("resultado").innerHTML = "❌ Productos no encontrados";
-    return;
-  }
+if (!p1) {
+  p1 = {
+    nombre: nombre1,
+    categoria: "otro",
+    azucar: 0,
+    grasa: 0,
+    proteina: 0,
+    procesado: 5
+  };
+}
+
+if (!p2) {
+  p2 = {
+    nombre: nombre2,
+    categoria: "otro",
+    azucar: 0,
+    grasa: 0,
+    proteina: 0,
+    procesado: 5
+  };
+}
 
   // 🚫 Validación categoría
   if (p1.categoria !== p2.categoria && p1.categoria !== "otro" && p2.categoria !== "otro") {

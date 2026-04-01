@@ -8,7 +8,7 @@ fetch('productos.json')
   });
 
 
-// 🔗 FUNCIÓN API (Open Food Facts)
+// 🔗 FUNCIÓN API (robusta)
 async function buscarProductoAPI(nombre) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1`);
@@ -16,23 +16,28 @@ async function buscarProductoAPI(nombre) {
 
     if (!data.products || data.products.length === 0) return null;
 
-    // 🔥 Buscar el primer producto con datos válidos
-    const prod = data.products.find(p =>
+    let prod = null;
+
+    // Intentar encontrar producto con datos
+    prod = data.products.find(p =>
       p.nutriments &&
       (p.nutriments.sugars_100g !== undefined ||
        p.nutriments.fat_100g !== undefined ||
        p.nutriments.proteins_100g !== undefined)
     );
 
-    if (!prod) return null;
+    // Si no hay, usar el primero
+    if (!prod) {
+      prod = data.products[0];
+    }
 
     return {
       nombre: prod.product_name || nombre,
       categoria: "otro",
 
-      azucar: prod.nutriments.sugars_100g || 0,
-      grasa: prod.nutriments.fat_100g || 0,
-      proteina: prod.nutriments.proteins_100g || 0,
+      azucar: prod.nutriments?.sugars_100g || 0,
+      grasa: prod.nutriments?.fat_100g || 0,
+      proteina: prod.nutriments?.proteins_100g || 0,
       procesado: prod.nova_group || 5
     };
 
@@ -42,7 +47,8 @@ async function buscarProductoAPI(nombre) {
   }
 }
 
-// 🔎 AUTOCOMPLETADO
+
+// 🔎 AUTOCOMPLETADO (local)
 function mostrarSugerencias(input, idSugerencias) {
   const valor = input.value.toLowerCase();
   const contenedor = document.getElementById(idSugerencias);
@@ -54,7 +60,6 @@ function mostrarSugerencias(input, idSugerencias) {
     p.nombre.toLowerCase().includes(valor)
   );
 
-  // Filtrar por categoría en producto2
   if (idSugerencias === "sug2") {
     const nombre1 = document.getElementById("producto1").value.toLowerCase();
     const p1 = productos.find(p => p.nombre === nombre1);
@@ -107,7 +112,7 @@ function getColorNota(nota) {
 }
 
 
-// 📊 DIFERENCIAS INTELIGENTES
+// 📊 DIFERENCIAS
 function generarDiferencias(p1, p2) {
   let frases = [];
 
@@ -160,7 +165,7 @@ function generarConsejo(p) {
 }
 
 
-// 🔍 COMPARAR (AHORA ASYNC)
+// 🔍 COMPARAR (FINAL, SIN ERRORES)
 async function comparar() {
   const nombre1 = document.getElementById("producto1").value.toLowerCase();
   const nombre2 = document.getElementById("producto2").value.toLowerCase();
@@ -168,7 +173,7 @@ async function comparar() {
   let p1 = productos.find(p => p.nombre === nombre1);
   let p2 = productos.find(p => p.nombre === nombre2);
 
-  // 🔗 Buscar en API si no existe
+  // Buscar en API si no existe
   if (!p1) {
     p1 = await buscarProductoAPI(nombre1);
   }
@@ -177,39 +182,27 @@ async function comparar() {
     p2 = await buscarProductoAPI(nombre2);
   }
 
-if (!p1) {
-  p1 = {
-    nombre: nombre1,
-    categoria: "otro",
-    azucar: 0,
-    grasa: 0,
-    proteina: 0,
-    procesado: 5
-  };
-}
+  // 🔥 FALLBACK (NUNCA FALLA)
+  if (!p1) {
+    p1 = {
+      nombre: nombre1,
+      categoria: "otro",
+      azucar: 0,
+      grasa: 0,
+      proteina: 0,
+      procesado: 5
+    };
+  }
 
-if (!p2) {
-  p2 = {
-    nombre: nombre2,
-    categoria: "otro",
-    azucar: 0,
-    grasa: 0,
-    proteina: 0,
-    procesado: 5
-  };
-}
-
-  // 🚫 Validación categoría
-  if (p1.categoria !== p2.categoria && p1.categoria !== "otro" && p2.categoria !== "otro") {
-    document.getElementById("resultado").innerHTML = `
-      <div class="card">
-        ⚠️ No puedes comparar estos productos<br><br>
-        <b>${p1.nombre}</b> es categoría <b>${p1.categoria}</b><br>
-        <b>${p2.nombre}</b> es categoría <b>${p2.categoria}</b><br><br>
-        👉 Intenta comparar productos similares
-      </div>
-    `;
-    return;
+  if (!p2) {
+    p2 = {
+      nombre: nombre2,
+      categoria: "otro",
+      azucar: 0,
+      grasa: 0,
+      proteina: 0,
+      procesado: 5
+    };
   }
 
   const score1 = calcularScore(p1);

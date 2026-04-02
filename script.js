@@ -210,6 +210,13 @@ async function comparar() {
   if (!p2) {
     p2 = { nombre: nombre2, categoria: "otro", azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
   }
+  if (!tieneDatos(p1) || !tieneDatos(p2)) {
+  document.getElementById("resultado").innerHTML = `
+    <h2>⚠️ Comparación no fiable</h2>
+    <p>No hay suficientes datos nutricionales para comparar estos productos.</p>
+  `;
+  return;
+}
 
   const score1 = calcularScore(p1);
   const score2 = calcularScore(p2);

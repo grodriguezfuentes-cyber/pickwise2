@@ -1,26 +1,30 @@
 // 🔍 Buscar producto en OpenFoodFacts API
 async function buscarProductoAPI(nombre) {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`;
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(nombre)}&search_simple=1&action=process&json=1&page_size=10`;
 
     try {
         const response = await fetch(url);
         const data = await response.json();
 
+        console.log("Respuesta API:", data);
+
         if (!data.products || data.products.length === 0) {
             return null;
         }
 
-        // elegir el primer producto con datos útiles
+        // 🔥 coger el primer producto que tenga nombre (aunque falten datos)
         for (let p of data.products) {
-            if (p.product_name && p.nutriments) {
+            if (p.product_name) {
+                let nutriments = p.nutriments || {};
+
                 return {
                     name: p.product_name.toLowerCase(),
 
-                    sugar: p.nutriments.sugars_100g || 0,
-                    fat: p.nutriments.fat_100g || 0,
-                    protein: p.nutriments.proteins_100g || 0,
-                    salt: p.nutriments.salt_100g || 0,
-                    fiber: p.nutriments.fiber_100g || 0
+                    sugar: nutriments.sugars_100g || 0,
+                    fat: nutriments.fat_100g || 0,
+                    protein: nutriments.proteins_100g || 0,
+                    salt: nutriments.salt_100g || 0,
+                    fiber: nutriments.fiber_100g || 0
                 };
             }
         }
@@ -34,7 +38,7 @@ async function buscarProductoAPI(nombre) {
 }
 
 
-// 🧠 SCORE INTELIGENTE (MEJORADO)
+// 🧠 SCORE INTELIGENTE
 function calcularScore(p) {
     let azucar = p.sugar || 0;
     let grasa = p.fat || 0;
@@ -66,6 +70,9 @@ async function comparar() {
 
     let prod1 = await buscarProductoAPI(p1);
     let prod2 = await buscarProductoAPI(p2);
+
+    console.log("Producto 1:", prod1);
+    console.log("Producto 2:", prod2);
 
     if (!prod1 || !prod2) {
         document.getElementById("resultado").innerHTML =

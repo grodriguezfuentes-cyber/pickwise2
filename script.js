@@ -1,162 +1,50 @@
-let productos = [];
+async function buscarProductoAPI(nombre) {
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1&page_size=5`;
 
-// 🔁 Traducciones básicas
-const traducciones = {
-    "manzana": "apple",
-    "pera": "pear",
-    "leche": "milk",
-    "chocolate": "chocolate",
-    "arroz": "rice",
-    "tallarines": "pasta",
-    "coca cola": "cola"
-};
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-// 📥 Cargar CSV
-Papa.parse("productos.csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
+        if (!data.products || data.products.length === 0) {
+            return null;
+        }
 
-        productos = results.data
-            .filter(row => row.product_name && row.product_name.length < 100)
-            .map(row => ({
-                name: limpiarNombre(row.product_name),
+        // coger el mejor producto con datos útiles
+        for (let p of data.products) {
+            if (p.product_name && p.nutriments) {
+                return {
+                    name: p.product_name.toLowerCase(),
+                    sugar: p.nutriments.sugars_100g || 0,
+                    fat: p.nutriments.fat_100g || 0,
+                    protein: p.nutriments.proteins_100g || 0
+                };
+            }
+        }
 
-                carbs: parseFloat(row.carbohydrates_100g) || 0,
-                sugar: parseFloat(row.sugars_100g) || 0,
-                fat: parseFloat(row.fat_100g) || 0,
-                protein: parseFloat(row.proteins_100g) || 0
-            }))
-            .filter(p => p.name.length > 2);
+        return null;
 
-        console.log("Productos cargados:", productos.length);
-
-        activarAutocompletado("producto1");
-        activarAutocompletado("producto2");
+    } catch (error) {
+        console.error("Error API:", error);
+        return null;
     }
-});
-
-
-// 🧼 LIMPIAR NOMBRE (CLAVE)
-function limpiarNombre(nombre) {
-    return (nombre || "")
-        .split(",")[0]
-        .toLowerCase()
-        .replace(/[^a-zA-Z0-9áéíóúñ\s]/g, "") // quitar símbolos raros
-        .trim();
 }
 
 
-// 🔍 AUTOCOMPLETADO
-function activarAutocompletado(idInput) {
-    const input = document.getElementById(idInput);
-
-    const lista = document.createElement("div");
-    lista.style.background = "white";
-    lista.style.border = "1px solid #ccc";
-    lista.style.borderRadius = "8px";
-    lista.style.position = "absolute";
-    lista.style.width = "100%";
-    lista.style.maxHeight = "150px";
-    lista.style.overflowY = "auto";
-    lista.style.zIndex = "1000";
-
-    input.parentNode.style.position = "relative";
-    input.parentNode.appendChild(lista);
-
-    input.addEventListener("input", function() {
-        const valor = input.value.toLowerCase().trim();
-        lista.innerHTML = "";
-
-        if (!valor) return;
-
-        let resultados = productos
-            .filter(p => p.name.startsWith(valor))
-            .slice(0, 5);
-
-        resultados.forEach(p => {
-            const item = document.createElement("div");
-            item.textContent = p.name;
-            item.style.padding = "8px";
-            item.style.cursor = "pointer";
-
-            item.addEventListener("mouseover", () => item.style.background = "#eee");
-            item.addEventListener("mouseout", () => item.style.background = "white");
-
-            item.addEventListener("click", function() {
-                input.value = p.name;
-                lista.innerHTML = "";
-            });
-
-            lista.appendChild(item);
-        });
-    });
-
-    document.addEventListener("click", function(e) {
-        if (e.target !== input) {
-            lista.innerHTML = "";
-        }
-    });
-}
-
-
-// 🔍 BUSCADOR INTELIGENTE (VERSIÓN BUENA)
-function buscarProducto(nombre) {
-    nombre = nombre.toLowerCase().trim();
-
-    if (traducciones[nombre]) {
-        nombre = traducciones[nombre];
-    }
-
-    let mejorMatch = null;
-    let maxScore = -Infinity;
-
-    for (let p of productos) {
-        if (!p.name) continue;
-
-        let score = 0;
-
-        // 🔥 exact match
-        if (p.name === nombre) return p;
-
-        // 🔥 empieza por
-        if (p.name.startsWith(nombre)) score += 5;
-
-        // 🔥 contiene
-        if (p.name.includes(nombre)) score += 3;
-
-        // 🔥 palabras sueltas
-        let palabras = nombre.split("");
-        for (let palabra of palabras) {
-            if (p.name.includes(palabra)) score += 0.5;
-        }
-
-        // ❌ penalizar nombres largos (ruido)
-        score -= p.name.length * 0.02;
-
-        if (score > maxScore) {
-            maxScore = score;
-            mejorMatch = p;
-        }
-    }
-
-    return mejorMatch;
-}
-
-
-// ⚖️ COMPARACIÓN INTELIGENTE
+// 🧠 fórmula mejorada
 function calcularScore(p) {
     return (p.sugar * 2) + (p.fat * 1.5) - (p.protein * 1.2);
 }
 
 
-// 🎯 COMPARAR
-function comparar() {
+// ⚖️ comparar usando API
+async function comparar() {
     let p1 = document.getElementById("producto1").value;
     let p2 = document.getElementById("producto2").value;
 
-    let prod1 = buscarProducto(p1);
-    let prod2 = buscarProducto(p2);
+    document.getElementById("resultado").innerHTML = "⏳ Buscando...";
+
+    let prod1 = await buscarProductoAPI(p1);
+    let prod2 = await buscarProductoAPI(p2);
 
     if (!prod1 || !prod2) {
         document.getElementById("resultado").innerHTML =

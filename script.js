@@ -14,6 +14,7 @@ function detectarCategoria(nombre) {
 
   // 🍎 FRUTA
   if (
+    n.includes("yogurt") ||
     n.includes("manzana") ||
     n.includes("pera") ||
     n.includes("platano") ||
@@ -201,8 +202,13 @@ async function comparar() {
   const nombre1 = document.getElementById("producto1").value.toLowerCase();
   const nombre2 = document.getElementById("producto2").value.toLowerCase();
 
-  let p1 = productos.find(p => p.nombre === nombre1);
-  let p2 = productos.find(p => p.nombre === nombre2);
+  let p1 = productos.find(p => 
+  p.nombre.includes(nombre1) || nombre1.includes(p.nombre)
+ );
+
+  let p2 = productos.find(p => 
+  p.nombre.includes(nombre2) || nombre2.includes(p.nombre)
+ );
 
   if (!p1) p1 = await buscarProductoAPI(nombre1);
   if (!p2) p2 = await buscarProductoAPI(nombre2);

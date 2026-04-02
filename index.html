@@ -4,17 +4,16 @@
   <meta charset="UTF-8">
   <title>PickWise</title>
   <link rel="stylesheet" href="style.css">
-
-  <!-- Librería para escaneo -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
 <body>
   <div class="container">
     <h1>PickWise 🛒</h1>
-    <p>Compara productos inteligentes</p>
+    <p>Escanea y compara productos</p>
 
-    <button onclick="iniciarEscaner()">📷 Escanear producto</button>
+    <button onclick="escanearProducto(1)">📷 Escanear producto 1</button>
+    <button onclick="escanearProducto(2)">📷 Escanear producto 2</button>
 
     <div id="reader" style="width:300px; margin:20px auto;"></div>
 

@@ -8,7 +8,7 @@ fetch('productos.json')
   });
 
 
-// 🔗 API MEJORADA
+// 🔗 API INTELIGENTE
 async function buscarProductoAPI(nombre) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1`);
@@ -16,17 +16,39 @@ async function buscarProductoAPI(nombre) {
 
     if (!data.products || data.products.length === 0) return null;
 
-    const productosValidos = data.products
+    const nombreLower = nombre.toLowerCase();
+
+    // 🔥 FILTRAR RESULTADOS MÁS LIMPIOS
+    let candidatos = data.products.filter(p => {
+      const n = (p.product_name || "").toLowerCase();
+
+      return (
+        n.includes(nombreLower) && // que coincida el nombre
+        !n.includes("zumo") &&
+        !n.includes("juice") &&
+        !n.includes("bebida") &&
+        !n.includes("drink")
+      );
+    });
+
+    // si no hay buenos candidatos, usar todos
+    if (candidatos.length === 0) {
+      candidatos = data.products;
+    }
+
+    // 🔥 priorizar menos procesados + más datos
+    const ordenados = candidatos
       .map(p => ({
         producto: p,
         score:
           (p.nutriments?.sugars_100g ? 1 : 0) +
           (p.nutriments?.fat_100g ? 1 : 0) +
-          (p.nutriments?.proteins_100g ? 1 : 0)
+          (p.nutriments?.proteins_100g ? 1 : 0) -
+          (p.nova_group || 5)
       }))
       .sort((a, b) => b.score - a.score);
 
-    const prod = productosValidos[0].producto;
+    const prod = ordenados[0].producto;
 
     return {
       nombre: prod.product_name || nombre,
@@ -44,7 +66,7 @@ async function buscarProductoAPI(nombre) {
 }
 
 
-// 🔎 AUTOCOMPLETADO
+// 🔎 AUTOCOMPLETADO (igual)
 function mostrarSugerencias(input, idSugerencias) {
   const valor = input.value.toLowerCase();
   const contenedor = document.getElementById(idSugerencias);
@@ -108,59 +130,6 @@ function getColorNota(nota) {
 }
 
 
-// 📊 DIFERENCIAS
-function generarDiferencias(p1, p2) {
-  let frases = [];
-
-  function calcularPorcentaje(a, b) {
-    if (b === 0) return 0;
-    return Math.round(((b - a) / b) * 100);
-  }
-
-  if (p1.azucar < p2.azucar) {
-    frases.push(`${calcularPorcentaje(p1.azucar, p2.azucar)}% menos azúcar`);
-  }
-
-  if (p1.grasa < p2.grasa) {
-    frases.push(`${calcularPorcentaje(p1.grasa, p2.grasa)}% menos grasa`);
-  }
-
-  if (p1.procesado < p2.procesado) {
-    frases.push(`${calcularPorcentaje(p1.procesado, p2.procesado)}% menos procesado`);
-  }
-
-  if (p1.proteina > p2.proteina && p2.proteina !== 0) {
-    frases.push(`${Math.round((p1.proteina / p2.proteina) * 100)}% más proteína`);
-  }
-
-  if (frases.length === 0) return "Son bastante similares";
-
-  return "Destaca porque tiene " + frases.join(", ");
-}
-
-
-// 🧠 CONSEJO
-function generarConsejo(p) {
-  if (p.procesado >= 8) {
-    return "⚠️ Es un producto ultraprocesado. Mejor consumir ocasionalmente.";
-  }
-
-  if (p.azucar > 20) {
-    return "⚠️ Alto en azúcar. No recomendable para consumo frecuente.";
-  }
-
-  if (p.proteina > 15 && p.procesado < 5) {
-    return "✅ Buena opción para una dieta equilibrada.";
-  }
-
-  if (p.procesado <= 2) {
-    return "✅ Producto natural. Muy buena elección.";
-  }
-
-  return "👉 Consumo moderado recomendado.";
-}
-
-
 // 🔥 DETECTAR DATOS
 function tieneDatos(p) {
   return p.azucar > 0 || p.grasa > 0 || p.proteina > 0;
@@ -210,22 +179,8 @@ async function comparar() {
   const nota1 = getNota(score1);
   const nota2 = getNota(score2);
 
-  let ganador, explicacion;
+  let ganador = score1 > score2 ? p1 : score2 > score1 ? p2 : null;
 
-  if (score1 > score2) {
-    ganador = p1;
-    explicacion = generarDiferencias(p1, p2);
-  } else if (score2 > score1) {
-    ganador = p2;
-    explicacion = generarDiferencias(p2, p1);
-  } else {
-    ganador = null;
-    explicacion = "Empate: ambos productos son similares";
-  }
-
-  const consejo = ganador ? generarConsejo(ganador) : "";
-
-  // 🔥 AVISO + ALTERNATIVA
   let aviso = "";
   let alternativaHTML = "";
 
@@ -234,38 +189,16 @@ async function comparar() {
 
     const alt = sugerirAlternativa(p1, p2);
     if (alt) {
-      alternativaHTML = `
-        <div style="margin-top:15px;">
-          👉 Alternativa recomendada: <b>${alt.nombre}</b>
-        </div>
-      `;
+      alternativaHTML = `👉 Alternativa recomendada: <b>${alt.nombre}</b>`;
     }
   }
 
   document.getElementById("resultado").innerHTML = `
-    <div class="card" style="border-left: 10px solid ${getColorNota(nota1)}">
-      <h3>${p1.nombre}</h3>
-      <h2 style="color:${getColorNota(nota1)}">${nota1}</h2>
-      Azúcar: ${p1.azucar}g<br>
-      Grasa: ${p1.grasa}g<br>
-      Proteína: ${p1.proteina}g<br>
-      Procesado: ${p1.procesado}/10
-    </div>
+    <div class="card"><h3>${p1.nombre}</h3><h2>${nota1}</h2></div>
+    <div class="card"><h3>${p2.nombre}</h3><h2>${nota2}</h2></div>
 
-    <div class="card" style="border-left: 10px solid ${getColorNota(nota2)}">
-      <h3>${p2.nombre}</h3>
-      <h2 style="color:${getColorNota(nota2)}">${nota2}</h2>
-      Azúcar: ${p2.azucar}g<br>
-      Grasa: ${p2.grasa}g<br>
-      Proteína: ${p2.proteina}g<br>
-      Procesado: ${p2.procesado}/10
-    </div>
-
-    <h2>🏆 Mejor opción: ${ganador ? ganador.nombre : "Empate"}</h2>
-    <p>${explicacion}</p>
-    <p><b>${consejo}</b></p>
-
-    <p style="color:orange;"><b>${aviso}</b></p>
-    ${alternativaHTML}
+    <h2>🏆 ${ganador ? ganador.nombre : "Empate"}</h2>
+    <p style="color:orange">${aviso}</p>
+    <p>${alternativaHTML}</p>
   `;
 }

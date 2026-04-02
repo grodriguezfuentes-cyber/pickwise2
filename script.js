@@ -4,7 +4,7 @@ let scannerActivo = false;
 let html5QrCode = null;
 
 
-// 📷 ESCANEAR
+// 📷 ESCANEAR PRODUCTO
 function escanearProducto(numero) {
   if (scannerActivo) return;
 
@@ -32,15 +32,16 @@ function escanearProducto(numero) {
       if (producto1 && producto2) {
         compararProductos();
       }
-    }
+    },
+
+    () => {}
   ).catch(err => {
-    console.error(err);
-    alert("Error con la cámara");
+    console.error("Error cámara:", err);
   });
 }
 
 
-// 🔍 API
+// 🔍 BUSCAR PRODUCTO (API)
 async function buscarProducto(codigo) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
@@ -66,13 +67,13 @@ async function buscarProducto(codigo) {
 }
 
 
-// 🧠 SCORE
+// 🧠 SCORE MEJORADO (MÁS REALISTA)
 function calcularScore(p) {
   let penalizacion =
-    p.azucar * 2 +
+    p.azucar * 1.2 +
     p.grasa * 1.5 +
-    p.sal * 2 -
-    p.proteina * 1.2 -
+    p.sal * 2.5 -
+    p.proteina * 2 -
     p.fibra * 1.5;
 
   let score = 100 - penalizacion;
@@ -81,7 +82,7 @@ function calcularScore(p) {
 }
 
 
-// 🎨 COLOR
+// 🎨 COLOR SEMÁFORO
 function obtenerColor(score) {
   if (score >= 70) return "verde";
   if (score >= 40) return "amarillo";
@@ -89,7 +90,35 @@ function obtenerColor(score) {
 }
 
 
-// 🧾 ESTADO
+// 🧠 EXPLICACIÓN INTELIGENTE
+function generarExplicacion(mejor, peor) {
+  let razones = [];
+
+  if (mejor.azucar < peor.azucar) {
+    razones.push("✔ Tiene menos azúcar");
+  }
+
+  if (mejor.proteina > peor.proteina) {
+    razones.push("✔ Tiene más proteína");
+  }
+
+  if (mejor.sal < peor.sal) {
+    razones.push("✔ Tiene menos sal");
+  }
+
+  if (mejor.fibra > peor.fibra) {
+    razones.push("✔ Tiene más fibra");
+  }
+
+  if (razones.length === 0) {
+    razones.push("✔ Mejor equilibrio nutricional");
+  }
+
+  return razones.join("<br>");
+}
+
+
+// 🧾 MOSTRAR ESTADO
 function mostrarEstado() {
   const r = document.getElementById("resultado");
 
@@ -102,7 +131,7 @@ function mostrarEstado() {
 }
 
 
-// ⚖️ COMPARAR (MEJORADO)
+// ⚖️ COMPARAR PRODUCTOS (FINAL)
 function compararProductos() {
   const r = document.getElementById("resultado");
 
@@ -118,6 +147,8 @@ function compararProductos() {
   const colorMejor = obtenerColor(scoreMejor);
   const colorPeor = obtenerColor(scorePeor);
 
+  const explicacion = generarExplicacion(mejor, peor);
+
   r.innerHTML = `
     <div class="card">
       <h2>🏆 Mejor opción</h2>
@@ -126,6 +157,8 @@ function compararProductos() {
       <div class="score ${colorMejor}">
         ${scoreMejor}/100
       </div>
+
+      <p>${explicacion}</p>
 
       <p>
         Azúcar: ${mejor.azucar}g<br>
@@ -156,7 +189,7 @@ function compararProductos() {
 }
 
 
-// 🔄 REINICIAR (ARREGLADO)
+// 🔄 REINICIAR
 function reiniciar() {
   producto1 = null;
   producto2 = null;

@@ -1,136 +1,104 @@
-import java.io.*;
-import java.util.*;
+let productos = [];
 
-class Product {
-    String name;
-    double sugar;
-    double fat;
-    double protein;
-    double carbs;
+// 🔥 CARGAR CSV
+async function cargarCSV() {
+    try {
+        const response = await fetch("productos.csv");
+        const data = await response.text();
 
-    public Product(String name, double sugar, double fat, double protein, double carbs) {
-        this.name = name;
-        this.sugar = sugar;
-        this.fat = fat;
-        this.protein = protein;
-        this.carbs = carbs;
+        const filas = data.split("\n").slice(1);
+
+        productos = filas.map(fila => {
+            const cols = fila.split(",");
+
+            return {
+                name: cols[1]?.toLowerCase().trim(),
+                fat: parseFloat(cols[3]) || 0,
+                carbs: parseFloat(cols[5]) || 0,
+                sugar: parseFloat(cols[6]) || 0,
+                protein: parseFloat(cols[7]) || 0
+            };
+        });
+
+        console.log("✅ Productos cargados:", productos.length);
+
+    } catch (error) {
+        console.error("❌ Error cargando CSV:", error);
     }
 }
 
-public class PickWiseApp {
+// 🔍 BUSCAR PRODUCTO (MEJORADO)
+function buscarProducto(nombre) {
+    nombre = nombre.toLowerCase().trim();
 
-    static List<Product> products = new ArrayList<>();
+    let mejorMatch = null;
 
-    public static void main(String[] args) {
-        loadCSV("Base limpia.csv");
+    for (let p of productos) {
+        if (!p.name) continue;
 
-        Scanner sc = new Scanner(System.in);
-
-        System.out.println("🔍 Escribe el nombre del producto:");
-        String input = sc.nextLine();
-
-        List<Product> results = searchProducts(input);
-
-        if (results.size() < 2) {
-            System.out.println("No hay suficientes productos para comparar.");
-            return;
-        }
-
-        Product p1 = results.get(0);
-        Product p2 = results.get(1);
-
-        compareProducts(p1, p2);
-    }
-
-    static void loadCSV(String filePath) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            br.readLine(); // saltar encabezado
-
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(",");
-
-                String name = data[1];
-
-                double fat = parse(data[3]);
-                double carbs = parse(data[5]);
-                double sugar = parse(data[6]);
-                double protein = parse(data[7]);
-
-                products.add(new Product(name, sugar, fat, protein, carbs));
-            }
-
-            System.out.println("✅ Productos cargados: " + products.size());
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (p.name.includes(nombre)) {
+            mejorMatch = p;
+            break;
         }
     }
 
-    static double parse(String value) {
-        try {
-            return Double.parseDouble(value);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    static List<Product> searchProducts(String keyword) {
-        List<Product> result = new ArrayList<>();
-
-        for (Product p : products) {
-            if (p.name.toLowerCase().contains(keyword.toLowerCase())) {
-                result.add(p);
-            }
-        }
-
-        return result;
-    }
-
-    static void compareProducts(Product p1, Product p2) {
-        System.out.println("\n📊 Comparando:");
-        System.out.println(p1.name + " VS " + p2.name);
-
-        int score1 = score(p1);
-        int score2 = score(p2);
-
-        if (score1 > score2) {
-            explain(p1, p2);
-        } else {
-            explain(p2, p1);
-        }
-    }
-
-    static int score(Product p) {
-        int score = 0;
-
-        // menos azúcar mejor
-        score += (int)(100 - p.sugar);
-
-        // menos grasa mejor
-        score += (int)(100 - p.fat);
-
-        // más proteína mejor
-        score += (int)(p.protein * 2);
-
-        return score;
-    }
-
-    static void explain(Product better, Product worse) {
-        System.out.println("\n🏆 Mejor opción: " + better.name);
-
-        if (better.sugar < worse.sugar) {
-            System.out.println("✔ Tiene menos azúcar");
-        }
-
-        if (better.fat < worse.fat) {
-            System.out.println("✔ Tiene menos grasa");
-        }
-
-        if (better.protein > worse.protein) {
-            System.out.println("✔ Tiene más proteína");
-        }
-
-        System.out.println("\n💡 Alternativa menos saludable: " + worse.name);
-    }
+    return mejorMatch;
 }
+
+// 🧠 COMPARAR
+function comparar() {
+    const p1Input = document.getElementById("producto1").value;
+    const p2Input = document.getElementById("producto2").value;
+
+    const p1 = buscarProducto(p1Input);
+    const p2 = buscarProducto(p2Input);
+
+    if (!p1 || !p2) {
+        mostrarResultado("❌ No se encontraron productos. Prueba con otro nombre.");
+        return;
+    }
+
+    const score1 = score(p1);
+    const score2 = score(p2);
+
+    let mejor, peor;
+
+    if (score1 > score2) {
+        mejor = p1;
+        peor = p2;
+    } else {
+        mejor = p2;
+        peor = p1;
+    }
+
+    let resultado = `<strong>🏆 Mejor opción:</strong> ${mejor.name}<br><br>`;
+
+    if (mejor.sugar < peor.sugar) {
+        resultado += "✔ Menos azúcar<br>";
+    }
+
+    if (mejor.fat < peor.fat) {
+        resultado += "✔ Menos grasa<br>";
+    }
+
+    if (mejor.protein > peor.protein) {
+        resultado += "✔ Más proteína<br>";
+    }
+
+    resultado += `<br><strong>💡 Alternativa menos saludable:</strong> ${peor.name}`;
+
+    mostrarResultado(resultado);
+}
+
+// 📊 SCORING INTELIGENTE
+function score(p) {
+    return (100 - p.sugar) + (100 - p.fat) + (p.protein * 2);
+}
+
+// 📺 MOSTRAR RESULTADO
+function mostrarResultado(texto) {
+    document.getElementById("resultado").innerHTML = texto;
+}
+
+// 🚀 INICIAR
+cargarCSV();

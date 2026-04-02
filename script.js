@@ -130,8 +130,8 @@ function detectarCategoria(nombre) {
   if (
     n.includes("manzana") ||
     n.includes("banana") ||
+    n.includes("platano") ||
     n.includes("pera") ||
-    n.includes("fruta") ||
     n.includes("fresa") ||
     n.includes("frambuesa") ||
     n.includes("arandano") ||
@@ -141,7 +141,7 @@ function detectarCategoria(nombre) {
   if (n.includes("leche") || n.includes("yogur") || n.includes("yogurt"))
     return "lacteo";
 
-  if (n.includes("pollo") || n.includes("carne") || n.includes("huevo"))
+  if (n.includes("pollo") || n.includes("carne") || n.includes("huevo") || n.includes("atun"))
     return "proteina";
 
   if (
@@ -158,10 +158,10 @@ function detectarCategoria(nombre) {
 function calcularScore(p) {
   let score = 100;
 
-  score -= p.azucar * 2;
-  score -= p.grasa * 1.5;
-  score += p.proteina * 2;
-  score -= p.procesado * 2;
+  score -= p.azucar * 3;
+  score -= p.procesado * 4;
+  score -= p.grasa * 1;
+  score += p.proteina * 1;
 
   return score;
 }
@@ -178,11 +178,12 @@ function generarExplicacion(mejor, peor) {
 }
 
 function sugerirAlternativa(p1, p2) {
-  let categoria = p1.categoria === p2.categoria ? p1.categoria : p1.categoria;
+
+  if (p1.categoria !== p2.categoria) return null;
 
   let opciones = productos.filter(p =>
-    detectarCategoria(p.nombre) === categoria &&
-    p.procesado <= 4
+    detectarCategoria(p.nombre) === p1.categoria &&
+    p.procesado <= 3
   );
 
   opciones = opciones.filter(p =>

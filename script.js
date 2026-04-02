@@ -1,70 +1,68 @@
-let scanner;
+let scannerActivo = false;
 
+function iniciarEscaner() {
+  if (scannerActivo) return;
 
-// 📸 INICIAR ESCÁNER
-function iniciarScanner() {
-    document.getElementById("resultado").innerHTML = "";
+  scannerActivo = true;
 
-    scanner = new Html5Qrcode("reader");
+  const reader = new Html5Qrcode("reader");
 
-    scanner.start(
-        { facingMode: "environment" },
-        {
-            fps: 10,
-            qrbox: 250
-        },
-        onScanSuccess
-    );
-}
+  reader.start(
+    { facingMode: "environment" },
+    {
+      fps: 10,
+      qrbox: 250
+    },
+    async (codigo) => {
+      reader.stop();
+      scannerActivo = false;
 
-
-// ✅ CUANDO DETECTA CÓDIGO
-async function onScanSuccess(decodedText) {
-
-    // parar cámara
-    await scanner.stop();
-
-    document.getElementById("reader").innerHTML = "";
-
-    buscarProductoPorCodigo(decodedText);
-}
-
-
-// 🔍 BUSCAR PRODUCTO POR CÓDIGO
-async function buscarProductoPorCodigo(barcode) {
-
-    document.getElementById("resultado").innerHTML = "⏳ Buscando producto...";
-
-    const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.status !== 1) {
-            document.getElementById("resultado").innerHTML =
-                "<p style='color:red;'>❌ Producto no encontrado</p>";
-            return;
-        }
-
-        let p = data.product;
-        let n = p.nutriments || {};
-
-        document.getElementById("resultado").innerHTML = `
-            <div class="card">
-                <h3>${p.product_name || "Producto"}</h3>
-
-                <p>Azúcar: ${n.sugars_100g || 0}g</p>
-                <p>Grasa: ${n.fat_100g || 0}g</p>
-                <p>Proteína: ${n.proteins_100g || 0}g</p>
-                <p>Sal: ${n.salt_100g || 0}g</p>
-                <p>Fibra: ${n.fiber_100g || 0}g</p>
-            </div>
-        `;
-
-    } catch (error) {
-        console.error(error);
-        document.getElementById("resultado").innerHTML =
-            "<p style='color:red;'>⚠️ Error al conectar</p>";
+      buscarProducto(codigo);
+    },
+    (error) => {
+      // ignoramos errores de escaneo continuo
     }
+  ).catch(err => {
+    console.error("Error cámara:", err);
+  });
+}
+
+async function buscarProducto(codigo) {
+  const resultado = document.getElementById("resultado");
+
+  resultado.innerHTML = "🔍 Buscando producto...";
+
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
+    const data = await res.json();
+
+    if (data.status === 0) {
+      resultado.innerHTML = "❌ Producto no encontrado";
+      return;
+    }
+
+    const p = data.product;
+
+    const nombre = p.product_name || "Sin nombre";
+    const azucar = p.nutriments?.sugars_100g ?? "?";
+    const grasa = p.nutriments?.fat_100g ?? "?";
+    const proteina = p.nutriments?.proteins_100g ?? "?";
+    const fibra = p.nutriments?.fiber_100g ?? "?";
+    const sal = p.nutriments?.salt_100g ?? "?";
+
+    resultado.innerHTML = `
+      <div class="card">
+        <h2>📦 ${nombre}</h2>
+        <p>Azúcar: ${azucar}g</p>
+        <p>Grasa: ${grasa}g</p>
+        <p>Proteína: ${proteina}g</p>
+        <p>Fibra: ${fibra}g</p>
+        <p>Sal: ${sal}g</p>
+      </div>
+    `;
+
+  } catch (err) {
+    resultado.innerHTML = "⚠️ Error al buscar producto";
+    console.error(err);
+  }
 }

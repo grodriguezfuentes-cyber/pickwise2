@@ -1,197 +1,136 @@
-let productos = [];
+import java.io.*;
+import java.util.*;
 
-fetch("productos.json")
-  .then(res => res.json())
-  .then(data => {
-    productos = data;
-  });
+class Product {
+    String name;
+    double sugar;
+    double fat;
+    double protein;
+    double carbs;
 
-async function comparar() {
-  const nombre1 = document.getElementById("producto1").value;
-  const nombre2 = document.getElementById("producto2").value;
-
-  let p1 = buscarProductoInteligente(nombre1);
-  let p2 = buscarProductoInteligente(nombre2);
-
-  if (!p1) p1 = await buscarProductoAPI(nombre1);
-  if (!p2) p2 = await buscarProductoAPI(nombre2);
-
-  if (!p1 || !p2) {
-    document.getElementById("resultado").innerHTML =
-      "❌ Productos no encontrados";
-    return;
-  }
-
-  p1.categoria = detectarCategoria(p1.nombre);
-  p2.categoria = detectarCategoria(p2.nombre);
-
-  const score1 = calcularScore(p1);
-  const score2 = calcularScore(p2);
-
-  const letra1 = convertirALetra(score1);
-  const letra2 = convertirALetra(score2);
-
-  let mejor = "";
-  let razon = "";
-
-  if (score1 > score2) {
-    mejor = p1.nombre;
-    razon = generarExplicacion(p1, p2);
-  } else if (score2 > score1) {
-    mejor = p2.nombre;
-    razon = generarExplicacion(p2, p1);
-  } else {
-    mejor = "Empate";
-    razon = "Ambos productos son bastante similares en sus valores nutricionales.";
-  }
-
-  let alternativa = sugerirAlternativa(p1, p2);
-
-  document.getElementById("resultado").innerHTML = `
-    <div>
-      <h3>${p1.nombre}</h3>
-      <p>${letra1}</p>
-
-      <h3>${p2.nombre}</h3>
-      <p>${letra2}</p>
-
-      <h2>🏆 ${mejor}</h2>
-      <p>${razon}</p>
-
-      ${
-        alternativa
-          ? `<p>👉 Alternativa recomendada: <b>${alternativa.nombre}</b></p>`
-          : ""
-      }
-    </div>
-  `;
+    public Product(String name, double sugar, double fat, double protein, double carbs) {
+        this.name = name;
+        this.sugar = sugar;
+        this.fat = fat;
+        this.protein = protein;
+        this.carbs = carbs;
+    }
 }
 
-function normalizarTexto(texto) {
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
+public class PickWiseApp {
 
-function buscarProductoInteligente(nombre) {
-  let nombreNormalizado = normalizarTexto(nombre);
+    static List<Product> products = new ArrayList<>();
 
-  let exacto = productos.find(p => 
-    normalizarTexto(p.nombre) === nombreNormalizado
-  );
-  if (exacto) return exacto;
+    public static void main(String[] args) {
+        loadCSV("Base limpia.csv");
 
-  let empieza = productos.find(p => 
-    normalizarTexto(p.nombre).startsWith(nombreNormalizado)
-  );
-  if (empieza) return empieza;
+        Scanner sc = new Scanner(System.in);
 
-  let contiene = productos.find(p => 
-    normalizarTexto(p.nombre).includes(nombreNormalizado)
-  );
-  if (contiene) return contiene;
+        System.out.println("🔍 Escribe el nombre del producto:");
+        String input = sc.nextLine();
 
-  return null;
-}
+        List<Product> results = searchProducts(input);
 
-async function buscarProductoAPI(nombre) {
-  try {
-    const res = await fetch(
-      `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&json=1`
-    );
-    const data = await res.json();
+        if (results.size() < 2) {
+            System.out.println("No hay suficientes productos para comparar.");
+            return;
+        }
 
-    if (!data.products || data.products.length === 0) return null;
+        Product p1 = results.get(0);
+        Product p2 = results.get(1);
 
-    const prod = data.products[0];
-
-    let nombreFinal = prod.product_name || nombre;
-
-    if (nombreFinal.length > 30) {
-      nombreFinal = nombre;
+        compareProducts(p1, p2);
     }
 
-    return {
-      nombre: nombreFinal.toLowerCase(),
-      azucar: prod.nutriments?.sugars_100g || 0,
-      grasa: prod.nutriments?.fat_100g || 0,
-      proteina: prod.nutriments?.proteins_100g || 0,
-      procesado: Math.floor(Math.random() * 10)
-    };
-  } catch {
-    return null;
-  }
-}
+    static void loadCSV(String filePath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            br.readLine(); // saltar encabezado
 
-function detectarCategoria(nombre) {
-  const n = normalizarTexto(nombre);
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
 
-  if (
-    n.includes("manzana") ||
-    n.includes("banana") ||
-    n.includes("platano") ||
-    n.includes("pera") ||
-    n.includes("fresa") ||
-    n.includes("frambuesa") ||
-    n.includes("arandano") ||
-    n.includes("naranja")
-  ) return "fruta";
+                String name = data[1];
 
-  if (n.includes("leche") || n.includes("yogur") || n.includes("yogurt"))
-    return "lacteo";
+                double fat = parse(data[3]);
+                double carbs = parse(data[5]);
+                double sugar = parse(data[6]);
+                double protein = parse(data[7]);
 
-  if (n.includes("pollo") || n.includes("carne") || n.includes("huevo") || n.includes("atun"))
-    return "proteina";
+                products.add(new Product(name, sugar, fat, protein, carbs));
+            }
 
-  if (
-    n.includes("arroz") ||
-    n.includes("pasta") ||
-    n.includes("tallarines") ||
-    n.includes("fideos")
-  )
-    return "carbohidrato";
+            System.out.println("✅ Productos cargados: " + products.size());
 
-  return "otro";
-}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-function calcularScore(p) {
-  let score = 100;
+    static double parse(String value) {
+        try {
+            return Double.parseDouble(value);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 
-  score -= p.azucar * 3;
-  score -= p.procesado * 4;
-  score -= p.grasa * 1;
-  score += p.proteina * 1;
+    static List<Product> searchProducts(String keyword) {
+        List<Product> result = new ArrayList<>();
 
-  return score;
-}
+        for (Product p : products) {
+            if (p.name.toLowerCase().contains(keyword.toLowerCase())) {
+                result.add(p);
+            }
+        }
 
-function convertirALetra(score) {
-  if (score > 80) return "A";
-  if (score > 60) return "B";
-  if (score > 40) return "C";
-  return "D";
-}
+        return result;
+    }
 
-function generarExplicacion(mejor, peor) {
-  return `Es mejor opción porque tiene mejores valores nutricionales que ${peor.nombre}.`;
-}
+    static void compareProducts(Product p1, Product p2) {
+        System.out.println("\n📊 Comparando:");
+        System.out.println(p1.name + " VS " + p2.name);
 
-function sugerirAlternativa(p1, p2) {
+        int score1 = score(p1);
+        int score2 = score(p2);
 
-  if (p1.categoria !== p2.categoria) return null;
+        if (score1 > score2) {
+            explain(p1, p2);
+        } else {
+            explain(p2, p1);
+        }
+    }
 
-  let opciones = productos.filter(p =>
-    detectarCategoria(p.nombre) === p1.categoria &&
-    p.procesado <= 3
-  );
+    static int score(Product p) {
+        int score = 0;
 
-  opciones = opciones.filter(p =>
-    p.nombre !== p1.nombre &&
-    p.nombre !== p2.nombre
-  );
+        // menos azúcar mejor
+        score += (int)(100 - p.sugar);
 
-  if (opciones.length === 0) return null;
+        // menos grasa mejor
+        score += (int)(100 - p.fat);
 
-  return opciones[Math.floor(Math.random() * opciones.length)];
+        // más proteína mejor
+        score += (int)(p.protein * 2);
+
+        return score;
+    }
+
+    static void explain(Product better, Product worse) {
+        System.out.println("\n🏆 Mejor opción: " + better.name);
+
+        if (better.sugar < worse.sugar) {
+            System.out.println("✔ Tiene menos azúcar");
+        }
+
+        if (better.fat < worse.fat) {
+            System.out.println("✔ Tiene menos grasa");
+        }
+
+        if (better.protein > worse.protein) {
+            System.out.println("✔ Tiene más proteína");
+        }
+
+        System.out.println("\n💡 Alternativa menos saludable: " + worse.name);
+    }
 }

@@ -31,7 +31,6 @@ async function buscarProductoAPI(nombre) {
     return {
       nombre: prod.product_name || nombre,
       categoria: "otro",
-
       azucar: prod.nutriments?.sugars_100g || 0,
       grasa: prod.nutriments?.fat_100g || 0,
       proteina: prod.nutriments?.proteins_100g || 0,
@@ -162,16 +161,23 @@ function generarConsejo(p) {
 }
 
 
-// 🔥 DETECTAR SI NO HAY DATOS
+// 🔥 DETECTAR DATOS
 function tieneDatos(p) {
   return p.azucar > 0 || p.grasa > 0 || p.proteina > 0;
 }
 
 
-// 🔥 SUGERIR ALTERNATIVA
-function sugerirAlternativa() {
-  // elegimos productos buenos de tu base
-  const opciones = productos.filter(p => p.procesado <= 4);
+// 🔥 ALTERNATIVA COHERENTE
+function sugerirAlternativa(p1, p2) {
+  const categoria = p1.categoria || p2.categoria;
+
+  let opciones = productos.filter(p =>
+    p.categoria === categoria && p.procesado <= 4
+  );
+
+  if (opciones.length === 0) {
+    opciones = productos.filter(p => p.procesado <= 4);
+  }
 
   if (opciones.length === 0) return null;
 
@@ -190,7 +196,6 @@ async function comparar() {
   if (!p1) p1 = await buscarProductoAPI(nombre1);
   if (!p2) p2 = await buscarProductoAPI(nombre2);
 
-  // fallback
   if (!p1) {
     p1 = { nombre: nombre1, categoria: "otro", azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
   }
@@ -220,14 +225,14 @@ async function comparar() {
 
   const consejo = ganador ? generarConsejo(ganador) : "";
 
-  // 🔥 NUEVO: aviso + alternativa
+  // 🔥 AVISO + ALTERNATIVA
   let aviso = "";
   let alternativaHTML = "";
 
   if (!tieneDatos(p1) || !tieneDatos(p2)) {
     aviso = "⚠️ Datos nutricionales incompletos.";
 
-    const alt = sugerirAlternativa();
+    const alt = sugerirAlternativa(p1, p2);
     if (alt) {
       alternativaHTML = `
         <div style="margin-top:15px;">

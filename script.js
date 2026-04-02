@@ -29,7 +29,7 @@ function escanearProducto(numero) {
       if (numero === 1) producto1 = producto;
       else producto2 = producto;
 
-      // 🔥 ESTO ES CLAVE (NO LO TOCAMOS)
+      // 👉 MOSTRAR ESTADO (CLAVE)
       mostrarEstado();
 
       if (producto1 && producto2) {
@@ -93,7 +93,7 @@ function obtenerColor(score) {
 }
 
 
-// 🧠 EXPLICACIÓN
+// 🧠 EXPLICACIÓN INTELIGENTE
 function generarExplicacion(mejor, peor) {
   let razones = [];
 
@@ -118,7 +118,7 @@ function generarExplicacion(mejor, peor) {
 }
 
 
-// 🧾 ESTADO (NO TOCAR)
+// 🧾 MOSTRAR ESTADO (IMPORTANTE)
 function mostrarEstado() {
   const r = document.getElementById("resultado");
 
@@ -126,12 +126,13 @@ function mostrarEstado() {
     <div class="card">
       <div><strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "No escaneado"}</div>
       <div><strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "No escaneado"}</div>
+      ${producto1 && !producto2 ? "<p>👉 Escanea el segundo producto</p>" : ""}
     </div>
   `;
 }
 
 
-// ⚖️ COMPARAR + HISTORIAL (AQUÍ SOLO AÑADIMOS)
+// ⚖️ COMPARAR
 function compararProductos() {
   const r = document.getElementById("resultado");
 
@@ -149,7 +150,7 @@ function compararProductos() {
 
   const explicacion = generarExplicacion(mejor, peor);
 
-  // ✅ SOLO AÑADIMOS ESTO (no rompe nada)
+  // 📊 HISTORIAL
   historial.unshift(`${mejor.nombre} > ${peor.nombre}`);
 
   r.innerHTML = `
@@ -157,13 +158,30 @@ function compararProductos() {
       <h2>🏆 Mejor opción</h2>
       <strong>${mejor.nombre}</strong>
       <div class="score ${colorMejor}">${scoreMejor}/100</div>
+
       <p><strong>${explicacion}</strong></p>
+
+      <p>
+        Azúcar: ${mejor.azucar}g<br>
+        Grasa: ${mejor.grasa}g<br>
+        Proteína: ${mejor.proteina}g<br>
+        Fibra: ${mejor.fibra}g<br>
+        Sal: ${mejor.sal}g
+      </p>
     </div>
 
     <div class="card">
       <h3>⚠️ Menos recomendable</h3>
       <strong>${peor.nombre}</strong>
       <div class="score ${colorPeor}">${scorePeor}/100</div>
+
+      <p>
+        Azúcar: ${peor.azucar}g<br>
+        Grasa: ${peor.grasa}g<br>
+        Proteína: ${peor.proteina}g<br>
+        Fibra: ${peor.fibra}g<br>
+        Sal: ${peor.sal}g
+      </p>
     </div>
 
     <div class="card">

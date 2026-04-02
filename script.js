@@ -4,7 +4,7 @@ let scannerActivo = false;
 let html5QrCode = null;
 
 
-// 📷 ESCANEAR PRODUCTO
+// 📷 ESCANEAR
 function escanearProducto(numero) {
   if (scannerActivo) return;
 
@@ -41,7 +41,7 @@ function escanearProducto(numero) {
 }
 
 
-// 🔍 BUSCAR PRODUCTO (API)
+// 🔍 API
 async function buscarProducto(codigo) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
@@ -67,7 +67,7 @@ async function buscarProducto(codigo) {
 }
 
 
-// 🧠 SCORE MEJORADO (MÁS REALISTA)
+// 🧠 SCORE
 function calcularScore(p) {
   let penalizacion =
     p.azucar * 1.2 +
@@ -82,7 +82,7 @@ function calcularScore(p) {
 }
 
 
-// 🎨 COLOR SEMÁFORO
+// 🎨 COLOR
 function obtenerColor(score) {
   if (score >= 70) return "verde";
   if (score >= 40) return "amarillo";
@@ -90,35 +90,47 @@ function obtenerColor(score) {
 }
 
 
-// 🧠 EXPLICACIÓN INTELIGENTE
+// 🧠 EXPLICACIÓN INTELIGENTE PRO
 function generarExplicacion(mejor, peor) {
   let razones = [];
 
   if (mejor.azucar < peor.azucar) {
-    razones.push("✔ Tiene menos azúcar");
+    razones.push("menos azúcar");
   }
 
   if (mejor.proteina > peor.proteina) {
-    razones.push("✔ Tiene más proteína");
+    razones.push("más proteína");
   }
 
   if (mejor.sal < peor.sal) {
-    razones.push("✔ Tiene menos sal");
+    razones.push("menos sal");
   }
 
   if (mejor.fibra > peor.fibra) {
-    razones.push("✔ Tiene más fibra");
+    razones.push("más fibra");
   }
 
+  // fallback
   if (razones.length === 0) {
-    razones.push("✔ Mejor equilibrio nutricional");
+    return "Este producto tiene un perfil nutricional más equilibrado.";
   }
 
-  return razones.join("<br>");
+  // 🔥 construir frase natural
+  let texto = "Este producto es mejor porque tiene ";
+
+  if (razones.length === 1) {
+    texto += razones[0];
+  } else if (razones.length === 2) {
+    texto += razones[0] + " y " + razones[1];
+  } else {
+    texto += razones.slice(0, -1).join(", ") + " y " + razones[razones.length - 1];
+  }
+
+  return texto + ".";
 }
 
 
-// 🧾 MOSTRAR ESTADO
+// 🧾 ESTADO
 function mostrarEstado() {
   const r = document.getElementById("resultado");
 
@@ -131,7 +143,7 @@ function mostrarEstado() {
 }
 
 
-// ⚖️ COMPARAR PRODUCTOS (FINAL)
+// ⚖️ COMPARAR
 function compararProductos() {
   const r = document.getElementById("resultado");
 
@@ -158,7 +170,7 @@ function compararProductos() {
         ${scoreMejor}/100
       </div>
 
-      <p>${explicacion}</p>
+      <p><strong>${explicacion}</strong></p>
 
       <p>
         Azúcar: ${mejor.azucar}g<br>

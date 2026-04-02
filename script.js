@@ -7,8 +7,8 @@ fetch("productos.json")
   });
 
 async function comparar() {
-  const nombre1 = document.getElementById("producto1").value.toLowerCase();
-  const nombre2 = document.getElementById("producto2").value.toLowerCase();
+  const nombre1 = document.getElementById("producto1").value;
+  const nombre2 = document.getElementById("producto2").value;
 
   let p1 = buscarProductoInteligente(nombre1);
   let p2 = buscarProductoInteligente(nombre2);
@@ -64,16 +64,32 @@ async function comparar() {
   `;
 }
 
-function buscarProductoInteligente(nombre) {
-  nombre = nombre.toLowerCase();
+function normalizarTexto(texto) {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
-  let exacto = productos.find(p => p.nombre === nombre);
+function buscarProductoInteligente(nombre) {
+  let nombreNormalizado = normalizarTexto(nombre);
+
+  // 1. EXACTO
+  let exacto = productos.find(p => 
+    normalizarTexto(p.nombre) === nombreNormalizado
+  );
   if (exacto) return exacto;
 
-  let empieza = productos.find(p => p.nombre.startsWith(nombre));
+  // 2. EMPIEZA POR
+  let empieza = productos.find(p => 
+    normalizarTexto(p.nombre).startsWith(nombreNormalizado)
+  );
   if (empieza) return empieza;
 
-  let contiene = productos.find(p => p.nombre.includes(nombre));
+  // 3. CONTIENE
+  let contiene = productos.find(p => 
+    normalizarTexto(p.nombre).includes(nombreNormalizado)
+  );
   if (contiene) return contiene;
 
   return null;
@@ -109,18 +125,24 @@ async function buscarProductoAPI(nombre) {
 }
 
 function detectarCategoria(nombre) {
-  const n = nombre.toLowerCase();
+  const n = normalizarTexto(nombre);
 
-  if (n.includes("manzana") || n.includes("banana") || n.includes("pera") || n.includes("fruta")) return "fruta";
-  if (n.includes("leche") || n.includes("yogur") || n.includes("yogurt")) return "lacteo";
-  if (n.includes("pollo") || n.includes("carne") || n.includes("huevo")) return "proteina";
+  if (n.includes("manzana") || n.includes("banana") || n.includes("pera") || n.includes("fruta") || n.includes("fresa") || n.includes("frambuesa") || n.includes("arandano"))
+    return "fruta";
+
+  if (n.includes("leche") || n.includes("yogur") || n.includes("yogurt"))
+    return "lacteo";
+
+  if (n.includes("pollo") || n.includes("carne") || n.includes("huevo"))
+    return "proteina";
 
   if (
     n.includes("arroz") ||
     n.includes("pasta") ||
     n.includes("tallarines") ||
     n.includes("fideos")
-  ) return "carbohidrato";
+  )
+    return "carbohidrato";
 
   return "otro";
 }
@@ -147,7 +169,7 @@ function sugerirAlternativa(p1, p2) {
   let categoria = p1.categoria === p2.categoria ? p1.categoria : p1.categoria;
 
   let opciones = productos.filter(p =>
-    p.categoria === categoria &&
+    detectarCategoria(p.nombre) === categoria &&
     p.procesado <= 4
   );
 

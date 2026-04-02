@@ -8,7 +8,7 @@ fetch('productos.json')
   });
 
 
-// 🔗 FUNCIÓN API MEJORADA
+// 🔗 API MEJORADA
 async function buscarProductoAPI(nombre) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1`);
@@ -16,7 +16,6 @@ async function buscarProductoAPI(nombre) {
 
     if (!data.products || data.products.length === 0) return null;
 
-    // 🔥 Elegir el producto con más datos nutricionales
     const productosValidos = data.products
       .map(p => ({
         producto: p,
@@ -46,7 +45,7 @@ async function buscarProductoAPI(nombre) {
 }
 
 
-// 🔎 AUTOCOMPLETADO (local)
+// 🔎 AUTOCOMPLETADO
 function mostrarSugerencias(input, idSugerencias) {
   const valor = input.value.toLowerCase();
   const contenedor = document.getElementById(idSugerencias);
@@ -58,7 +57,6 @@ function mostrarSugerencias(input, idSugerencias) {
     p.nombre.toLowerCase().includes(valor)
   );
 
-  // Filtrar categoría en producto 2
   if (idSugerencias === "sug2") {
     const nombre1 = document.getElementById("producto1").value.toLowerCase();
     const p1 = productos.find(p => p.nombre === nombre1);
@@ -164,7 +162,24 @@ function generarConsejo(p) {
 }
 
 
-// 🔍 COMPARAR (FINAL)
+// 🔥 DETECTAR SI NO HAY DATOS
+function tieneDatos(p) {
+  return p.azucar > 0 || p.grasa > 0 || p.proteina > 0;
+}
+
+
+// 🔥 SUGERIR ALTERNATIVA
+function sugerirAlternativa() {
+  // elegimos productos buenos de tu base
+  const opciones = productos.filter(p => p.procesado <= 4);
+
+  if (opciones.length === 0) return null;
+
+  return opciones[Math.floor(Math.random() * opciones.length)];
+}
+
+
+// 🔍 COMPARAR
 async function comparar() {
   const nombre1 = document.getElementById("producto1").value.toLowerCase();
   const nombre2 = document.getElementById("producto2").value.toLowerCase();
@@ -172,36 +187,16 @@ async function comparar() {
   let p1 = productos.find(p => p.nombre === nombre1);
   let p2 = productos.find(p => p.nombre === nombre2);
 
-  // Buscar en API si no existe
+  if (!p1) p1 = await buscarProductoAPI(nombre1);
+  if (!p2) p2 = await buscarProductoAPI(nombre2);
+
+  // fallback
   if (!p1) {
-    p1 = await buscarProductoAPI(nombre1);
+    p1 = { nombre: nombre1, categoria: "otro", azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
   }
 
   if (!p2) {
-    p2 = await buscarProductoAPI(nombre2);
-  }
-
-  // 🔥 FALLBACK (nunca falla)
-  if (!p1) {
-    p1 = {
-      nombre: nombre1,
-      categoria: "otro",
-      azucar: 0,
-      grasa: 0,
-      proteina: 0,
-      procesado: 5
-    };
-  }
-
-  if (!p2) {
-    p2 = {
-      nombre: nombre2,
-      categoria: "otro",
-      azucar: 0,
-      grasa: 0,
-      proteina: 0,
-      procesado: 5
-    };
+    p2 = { nombre: nombre2, categoria: "otro", azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
   }
 
   const score1 = calcularScore(p1);
@@ -225,6 +220,23 @@ async function comparar() {
 
   const consejo = ganador ? generarConsejo(ganador) : "";
 
+  // 🔥 NUEVO: aviso + alternativa
+  let aviso = "";
+  let alternativaHTML = "";
+
+  if (!tieneDatos(p1) || !tieneDatos(p2)) {
+    aviso = "⚠️ Datos nutricionales incompletos.";
+
+    const alt = sugerirAlternativa();
+    if (alt) {
+      alternativaHTML = `
+        <div style="margin-top:15px;">
+          👉 Alternativa recomendada: <b>${alt.nombre}</b>
+        </div>
+      `;
+    }
+  }
+
   document.getElementById("resultado").innerHTML = `
     <div class="card" style="border-left: 10px solid ${getColorNota(nota1)}">
       <h3>${p1.nombre}</h3>
@@ -247,5 +259,8 @@ async function comparar() {
     <h2>🏆 Mejor opción: ${ganador ? ganador.nombre : "Empate"}</h2>
     <p>${explicacion}</p>
     <p><b>${consejo}</b></p>
+
+    <p style="color:orange;"><b>${aviso}</b></p>
+    ${alternativaHTML}
   `;
 }

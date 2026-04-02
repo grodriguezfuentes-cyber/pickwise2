@@ -2,24 +2,86 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PickWise</title>
-  <link rel="stylesheet" href="style.css">
+
   <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 12px;
+      border: none;
+      background: black;
+      color: white;
+      font-size: 16px;
+    }
+
+    #reader {
+      margin-top: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 16px;
+      text-align: left;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .score {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .verde { color: green; }
+    .amarillo { color: orange; }
+    .rojo { color: red; }
+
+    .titulo {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+  </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>PickWise 🛒</h1>
-    <p>Escanea y compara productos</p>
 
-    <button onclick="escanearProducto(1)">📷 Escanear producto 1</button>
-    <button onclick="escanearProducto(2)">📷 Escanear producto 2</button>
+<div class="container">
+  <h1>PickWise 🛒</h1>
+  <p>Escanea y elige mejor</p>
 
-    <div id="reader" style="width:300px; margin:20px auto;"></div>
+  <button onclick="escanearProducto(1)">📷 Escanear producto 1</button>
+  <button onclick="escanearProducto(2)">📷 Escanear producto 2</button>
+  <button onclick="reiniciar()">🔄 Reiniciar</button>
 
-    <div id="resultado"></div>
-  </div>
+  <div id="reader"></div>
+  <div id="resultado"></div>
+</div>
 
-  <script src="./script.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html>

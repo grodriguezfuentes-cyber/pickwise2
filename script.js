@@ -18,13 +18,17 @@ function detectarCategoria(nombre) {
     n.includes("platano") ||
     n.includes("banana") ||
     n.includes("fresa") ||
+    n.includes("fresas") ||
     n.includes("frambuesa") ||
     n.includes("naranja") ||
     n.includes("melon") ||
     n.includes("sandia") ||
     n.includes("ciruela") ||
     n.includes("damasco") ||
-    n.includes("albaricoque")
+    n.includes("albaricoque") ||
+    n.includes("arandano") ||
+    n.includes("arándano") ||
+    n.includes("blueberry")
   ) return "fruta";
 
   if (
@@ -46,7 +50,7 @@ function detectarCategoria(nombre) {
 }
 
 
-// 🔗 API
+// 🔗 BUSCAR EN API
 async function buscarProductoAPI(nombre) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&action=process&json=1`);
@@ -58,11 +62,18 @@ async function buscarProductoAPI(nombre) {
 
     let candidatos = data.products.filter(p => {
       const n = (p.product_name || "").toLowerCase();
+
       return (
         n.includes(nombreLower) &&
         !n.includes("zumo") &&
         !n.includes("juice") &&
-        !n.includes("bebida")
+        !n.includes("bebida") &&
+        !n.includes("confitura") &&
+        !n.includes("mermelada") &&
+        !n.includes("jam") &&
+        !n.includes("salsa") &&
+        !n.includes("yogur") &&
+        !n.includes("postre")
       );
     });
 
@@ -85,7 +96,7 @@ async function buscarProductoAPI(nombre) {
 }
 
 
-// 🧠 IA SIMULADA (explicación inteligente)
+// 🧠 IA SIMULADA
 function generarExplicacionIA(p1, p2, ganador) {
   if (!ganador) return "Ambos productos son bastante similares en sus valores nutricionales.";
 
@@ -115,14 +126,15 @@ function generarExplicacionIA(p1, p2, ganador) {
 }
 
 
-// 🔥 DETECTAR DATOS
+// 🔥 DATOS VÁLIDOS
 function tieneDatos(p) {
   return p.azucar > 0 || p.grasa > 0 || p.proteina > 0;
 }
 
 
-// 🔥 ALTERNATIVA
+// 🔥 ALTERNATIVA INTELIGENTE
 function sugerirAlternativa(p1, p2) {
+
   const esFruta = (p) => p.categoria === "fruta";
 
   let categoria = esFruta(p1) || esFruta(p2) ? "fruta" : p1.categoria;
@@ -168,8 +180,8 @@ async function comparar() {
   if (!p1) p1 = await buscarProductoAPI(nombre1);
   if (!p2) p2 = await buscarProductoAPI(nombre2);
 
-  if (!p1) p1 = { nombre: nombre1, categoria: "otro", azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
-  if (!p2) p2 = { nombre: nombre2, categoria: "otro", azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
+  if (!p1) p1 = { nombre: nombre1, categoria: detectarCategoria(nombre1), azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
+  if (!p2) p2 = { nombre: nombre2, categoria: detectarCategoria(nombre2), azucar: 0, grasa: 0, proteina: 0, procesado: 5 };
 
   let aviso = "";
   let alternativaHTML = "";
@@ -194,8 +206,15 @@ async function comparar() {
   const explicacionIA = generarExplicacionIA(p1, p2, ganador);
 
   document.getElementById("resultado").innerHTML = `
-    <div class="card"><h3>${p1.nombre}</h3><h2>${nota1}</h2></div>
-    <div class="card"><h3>${p2.nombre}</h3><h2>${nota2}</h2></div>
+    <div class="card">
+      <h3>${p1.nombre}</h3>
+      <h2>${nota1}</h2>
+    </div>
+
+    <div class="card">
+      <h3>${p2.nombre}</h3>
+      <h2>${nota2}</h2>
+    </div>
 
     <h2>🏆 ${ganador ? ganador.nombre : "Empate"}</h2>
 

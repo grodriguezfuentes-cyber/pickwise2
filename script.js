@@ -43,7 +43,9 @@ function detectarCategoria(nombre) {
     n.includes("chocolate") ||
     n.includes("galleta") ||
     n.includes("snack") ||
-    n.includes("barrita")
+    n.includes("barrita") ||
+    n.includes("snickers") ||
+    n.includes("kitkat")
   ) return "snack";
 
   return "otro";
@@ -132,20 +134,30 @@ function tieneDatos(p) {
 }
 
 
-// 🔥 ALTERNATIVA INTELIGENTE
+// 🔥 ALTERNATIVA INTELIGENTE (FIX DEFINITIVO)
 function sugerirAlternativa(p1, p2) {
 
-  const esFruta = (p) => p.categoria === "fruta";
+  let categoria;
 
-  let categoria = esFruta(p1) || esFruta(p2) ? "fruta" : p1.categoria;
+  if (p1.categoria === p2.categoria) {
+    categoria = p1.categoria;
+  } else if (p1.categoria === "fruta" || p2.categoria === "fruta") {
+    categoria = "fruta";
+  } else if (p1.categoria === "snack" || p2.categoria === "snack") {
+    categoria = "snack";
+  } else {
+    categoria = p1.categoria;
+  }
 
   let opciones = productos.filter(p =>
-    p.categoria === categoria && p.procesado <= 4
+    p.categoria === categoria &&
+    p.procesado <= 4
   );
 
-  if (opciones.length === 0) {
-    opciones = productos.filter(p => p.procesado <= 4);
-  }
+  opciones = opciones.filter(p =>
+    p.nombre !== p1.nombre &&
+    p.nombre !== p2.nombre
+  );
 
   if (opciones.length === 0) return null;
 

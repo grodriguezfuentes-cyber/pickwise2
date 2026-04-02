@@ -3,59 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <title>PickWise</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
     <style>
         body {
             font-family: Arial;
-            text-align: center;
             background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            margin-top: 100px;
         }
 
-        h1 {
-            margin-top: 40px;
+        .container {
+            text-align: center;
+            width: 400px;
         }
 
         input {
-            display: block;
-            margin: 10px auto;
-            padding: 10px;
-            width: 250px;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
             border-radius: 8px;
             border: 1px solid #ccc;
         }
 
         button {
-            padding: 12px 30px;
-            border: none;
+            width: 100%;
+            padding: 12px;
             background: black;
             color: white;
+            border: none;
             border-radius: 8px;
             cursor: pointer;
         }
 
         #resultado {
             margin-top: 20px;
+            background: white;
             padding: 15px;
-            background: #eaeaea;
             border-radius: 10px;
-            width: 300px;
-            margin-left: auto;
-            margin-right: auto;
+        }
+
+        .error {
+            color: red;
         }
     </style>
 </head>
 <body>
 
-<h1>PickWise 🛒</h1>
-<p>Compara productos inteligentes</p>
+<div class="container">
+    <h1>PickWise 🛒</h1>
+    <p>Compara productos inteligentes</p>
 
-<input id="producto1" placeholder="Producto 1">
-<input id="producto2" placeholder="Producto 2">
+    <input id="producto1" placeholder="Producto 1">
+    <input id="producto2" placeholder="Producto 2">
 
-<button onclick="comparar()">Comparar</button>
+    <button onclick="comparar()">Comparar</button>
 
-<div id="resultado"></div>
+    <div id="resultado"></div>
+</div>
 
-<script src="script.js"></script>
+<script>
+let productos = [];
+
+// 🔁 Traducciones básicas
+const traducciones = {
+    "manzana": "apple",
+    "pera": "pear",
+    "leche": "milk",
+    "chocolate": "chocolate"
+};
+
+// 📥 Cargar CSV
+Papa.parse("productos.csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+        productos = results.data
+            .filter(row => row.product_name) // quitar vacíos
+            .map(row => ({
+                name: row.product_name.toLowerCase(),
+                carbs: parseFloat(row.carbohydrates_100g) || 0,
+                sugar: parseFloat(row.sugars_100g) || 0,
+                fat: parseFloat(row.fat_100g) || 0,
+                protein: parseFloat(row.proteins_100g) || 0
+            }));
+
+        console.log("Productos cargados:", productos.length);
+        console.log(productos.slice(0,5));
+    }
+});
+
+// 🔍 Buscar producto (mejorado)
+function buscarProducto(nombre) {
+    nombre = nombre.toLowerCase().trim();
+
+    // traducir si existe
+    if (traducciones[nombre]) {
+        nombre = traducciones[nombre];
+    }
+
+    let mejorMatch = null;
+    let maxScore = 0;
+
+    for (let p of productos) {
+        if (!p.name) continue;
+
+        let score = 0;
+
+        if (p.name.includes(nombre)) score += 2;
+
+        let palabras = nombre.split(" ");
+        for (let palabra of palabras) {
+            if (p.name.includes(palabra)) {
+                score += 1;
+            }
+        }
+
+        if (score > maxScore) {
+            maxScore = score;
+            mejorMatch = p;
+        }
+    }
+
+    return mejorMatch;
+}
+
+// ⚖️ Comparar
+function comparar() {
+    let p1 = document.getElementById("producto1").value;
+    let p2 = document.getElementById("producto2").value;
+
+    let prod1 = buscarProducto(p1);
+    let prod2 = buscarProducto(p2);
+
+    if (!prod1 || !prod2) {
+        document.getElementById("resultado").innerHTML =
+            "<p class='error'>❌ No se encontraron productos. Prueba con otro nombre.</p>";
+        return;
+    }
+
+    let score1 = prod1.sugar + prod1.fat;
+    let score2 = prod2.sugar + prod2.fat;
+
+    let mejor = score1 < score2 ? prod1 : prod2;
+
+    document.getElementById("resultado").innerHTML = `
+        <h3>✅ Mejor opción:</h3>
+        <p><b>${mejor.name}</b></p>
+        <p>Menos azúcar + grasa</p>
+    `;
+}
+</script>
 
 </body>
 </html>

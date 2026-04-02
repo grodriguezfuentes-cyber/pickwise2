@@ -3,6 +3,8 @@ let producto2 = null;
 let scannerActivo = false;
 let html5QrCode = null;
 
+let historial = [];
+
 
 // 📷 ESCANEAR
 function escanearProducto(numero) {
@@ -32,16 +34,12 @@ function escanearProducto(numero) {
       if (producto1 && producto2) {
         compararProductos();
       }
-    },
-
-    () => {}
-  ).catch(err => {
-    console.error("Error cámara:", err);
-  });
+    }
+  ).catch(err => console.error(err));
 }
 
 
-// 🔍 API
+// 🔍 API + DETECCIÓN TIPO
 async function buscarProducto(codigo) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
@@ -51,8 +49,12 @@ async function buscarProducto(codigo) {
 
     const p = data.product;
 
+    const nombre = p.product_name || "Producto";
+
     return {
-      nombre: p.product_name || "Producto",
+      nombre,
+      tipo: detectarTipo(nombre),
+
       azucar: p.nutriments?.sugars_100g ?? 0,
       grasa: p.nutriments?.fat_100g ?? 0,
       proteina: p.nutriments?.proteins_100g ?? 0,
@@ -67,16 +69,44 @@ async function buscarProducto(codigo) {
 }
 
 
-// 🧠 SCORE
-function calcularScore(p) {
-  let penalizacion =
-    p.azucar * 1.2 +
-    p.grasa * 1.5 +
-    p.sal * 2.5 -
-    p.proteina * 2 -
-    p.fibra * 1.5;
+// 🧠 DETECTAR TIPO (SIMPLE PERO EFECTIVO)
+function detectarTipo(nombre) {
+  nombre = nombre.toLowerCase();
 
-  let score = 100 - penalizacion;
+  if (nombre.includes("coca") || nombre.includes("cola") || nombre.includes("juice"))
+    return "bebida";
+
+  if (nombre.includes("pan") || nombre.includes("bread"))
+    return "pan";
+
+  if (nombre.includes("chocolate") || nombre.includes("cookie"))
+    return "snack";
+
+  if (nombre.includes("milk") || nombre.includes("leche"))
+    return "lacteo";
+
+  return "general";
+}
+
+
+// 🧠 SCORE INTELIGENTE SEGÚN TIPO
+function calcularScore(p) {
+
+  let score = 100;
+
+  if (p.tipo === "bebida") {
+    score -= p.azucar * 2.5;
+  } else if (p.tipo === "snack") {
+    score -= p.azucar * 1.5;
+    score -= p.grasa * 1.5;
+  } else {
+    score -= p.azucar * 1.2;
+    score -= p.grasa * 1.5;
+  }
+
+  score -= p.sal * 2;
+  score += p.proteina * 2;
+  score += p.fibra * 1.5;
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
@@ -90,60 +120,23 @@ function obtenerColor(score) {
 }
 
 
-// 🧠 EXPLICACIÓN INTELIGENTE PRO
+// 🧠 EXPLICACIÓN
 function generarExplicacion(mejor, peor) {
   let razones = [];
 
-  if (mejor.azucar < peor.azucar) {
-    razones.push("menos azúcar");
-  }
+  if (mejor.azucar < peor.azucar) razones.push("menos azúcar");
+  if (mejor.proteina > peor.proteina) razones.push("más proteína");
+  if (mejor.sal < peor.sal) razones.push("menos sal");
+  if (mejor.fibra > peor.fibra) razones.push("más fibra");
 
-  if (mejor.proteina > peor.proteina) {
-    razones.push("más proteína");
-  }
+  if (razones.length === 0) return "Este producto tiene un perfil más equilibrado.";
 
-  if (mejor.sal < peor.sal) {
-    razones.push("menos sal");
-  }
-
-  if (mejor.fibra > peor.fibra) {
-    razones.push("más fibra");
-  }
-
-  // fallback
-  if (razones.length === 0) {
-    return "Este producto tiene un perfil nutricional más equilibrado.";
-  }
-
-  // 🔥 construir frase natural
-  let texto = "Este producto es mejor porque tiene ";
-
-  if (razones.length === 1) {
-    texto += razones[0];
-  } else if (razones.length === 2) {
-    texto += razones[0] + " y " + razones[1];
-  } else {
-    texto += razones.slice(0, -1).join(", ") + " y " + razones[razones.length - 1];
-  }
-
-  return texto + ".";
+  return "Este producto es mejor porque tiene " +
+    razones.join(", ").replace(/, ([^,]*)$/, " y $1") + ".";
 }
 
 
-// 🧾 ESTADO
-function mostrarEstado() {
-  const r = document.getElementById("resultado");
-
-  r.innerHTML = `
-    <div class="card">
-      <div><strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "No escaneado"}</div>
-      <div><strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "No escaneado"}</div>
-    </div>
-  `;
-}
-
-
-// ⚖️ COMPARAR
+// ⚖️ COMPARAR + HISTORIAL
 function compararProductos() {
   const r = document.getElementById("resultado");
 
@@ -161,41 +154,32 @@ function compararProductos() {
 
   const explicacion = generarExplicacion(mejor, peor);
 
+  // 📊 guardar historial
+  historial.push({
+    mejor: mejor.nombre,
+    peor: peor.nombre,
+    fecha: new Date().toLocaleTimeString()
+  });
+
   r.innerHTML = `
     <div class="card">
       <h2>🏆 Mejor opción</h2>
       <strong>${mejor.nombre}</strong>
-
-      <div class="score ${colorMejor}">
-        ${scoreMejor}/100
-      </div>
-
+      <div class="score ${colorMejor}">${scoreMejor}/100</div>
       <p><strong>${explicacion}</strong></p>
-
-      <p>
-        Azúcar: ${mejor.azucar}g<br>
-        Grasa: ${mejor.grasa}g<br>
-        Proteína: ${mejor.proteina}g<br>
-        Fibra: ${mejor.fibra}g<br>
-        Sal: ${mejor.sal}g
-      </p>
+      <p>Tipo: ${mejor.tipo}</p>
     </div>
 
     <div class="card">
       <h3>⚠️ Menos recomendable</h3>
       <strong>${peor.nombre}</strong>
+      <div class="score ${colorPeor}">${scorePeor}/100</div>
+      <p>Tipo: ${peor.tipo}</p>
+    </div>
 
-      <div class="score ${colorPeor}">
-        ${scorePeor}/100
-      </div>
-
-      <p>
-        Azúcar: ${peor.azucar}g<br>
-        Grasa: ${peor.grasa}g<br>
-        Proteína: ${peor.proteina}g<br>
-        Fibra: ${peor.fibra}g<br>
-        Sal: ${peor.sal}g
-      </p>
+    <div class="card">
+      <h3>📊 Historial</h3>
+      ${historial.map(h => `<p>${h.mejor} > ${h.peor}</p>`).join("")}
     </div>
   `;
 }
@@ -207,13 +191,11 @@ function reiniciar() {
   producto2 = null;
 
   if (html5QrCode) {
-    try {
-      html5QrCode.stop();
-    } catch (e) {}
+    try { html5QrCode.stop(); } catch (e) {}
   }
 
   document.getElementById("reader").innerHTML = "";
-  document.getElementById("resultado").innerHTML = "<p>🔄 Listo para nueva comparación</p>";
+  document.getElementById("resultado").innerHTML = "<p>🔄 Listo</p>";
 
   scannerActivo = false;
 }

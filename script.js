@@ -1,20 +1,23 @@
 let producto1 = null;
 let producto2 = null;
 let scannerActivo = false;
+let html5QrCode = null;
 
+
+// 📷 ESCANEAR
 function escanearProducto(numero) {
   if (scannerActivo) return;
 
   scannerActivo = true;
 
-  const reader = new Html5Qrcode("reader");
+  html5QrCode = new Html5Qrcode("reader");
 
-  reader.start(
+  html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 250 },
 
     async (codigo) => {
-      await reader.stop();
+      await html5QrCode.stop();
       scannerActivo = false;
 
       const producto = await buscarProducto(codigo);
@@ -36,6 +39,8 @@ function escanearProducto(numero) {
   });
 }
 
+
+// 🔍 API
 async function buscarProducto(codigo) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
@@ -60,7 +65,8 @@ async function buscarProducto(codigo) {
   }
 }
 
-// 🧠 SCORE → 0 a 100
+
+// 🧠 SCORE
 function calcularScore(p) {
   let penalizacion =
     p.azucar * 2 +
@@ -71,33 +77,32 @@ function calcularScore(p) {
 
   let score = 100 - penalizacion;
 
-  if (score < 0) score = 0;
-  if (score > 100) score = 100;
-
-  return Math.round(score);
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
-// 🎨 SEMÁFORO
+
+// 🎨 COLOR
 function obtenerColor(score) {
   if (score >= 70) return "verde";
   if (score >= 40) return "amarillo";
   return "rojo";
 }
 
+
+// 🧾 ESTADO
 function mostrarEstado() {
   const r = document.getElementById("resultado");
 
   r.innerHTML = `
     <div class="card">
-      <div class="titulo">Producto 1:</div>
-      ${producto1 ? producto1.nombre : "No escaneado"}
-
-      <div class="titulo" style="margin-top:10px;">Producto 2:</div>
-      ${producto2 ? producto2.nombre : "No escaneado"}
+      <div><strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "No escaneado"}</div>
+      <div><strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "No escaneado"}</div>
     </div>
   `;
 }
 
+
+// ⚖️ COMPARAR (MEJORADO)
 function compararProductos() {
   const r = document.getElementById("resultado");
 
@@ -122,7 +127,13 @@ function compararProductos() {
         ${scoreMejor}/100
       </div>
 
-      <p>✔ Mejor perfil nutricional</p>
+      <p>
+        Azúcar: ${mejor.azucar}g<br>
+        Grasa: ${mejor.grasa}g<br>
+        Proteína: ${mejor.proteina}g<br>
+        Fibra: ${mejor.fibra}g<br>
+        Sal: ${mejor.sal}g
+      </p>
     </div>
 
     <div class="card">
@@ -132,14 +143,32 @@ function compararProductos() {
       <div class="score ${colorPeor}">
         ${scorePeor}/100
       </div>
+
+      <p>
+        Azúcar: ${peor.azucar}g<br>
+        Grasa: ${peor.grasa}g<br>
+        Proteína: ${peor.proteina}g<br>
+        Fibra: ${peor.fibra}g<br>
+        Sal: ${peor.sal}g
+      </p>
     </div>
   `;
 }
 
+
+// 🔄 REINICIAR (ARREGLADO)
 function reiniciar() {
   producto1 = null;
   producto2 = null;
 
+  if (html5QrCode) {
+    try {
+      html5QrCode.stop();
+    } catch (e) {}
+  }
+
   document.getElementById("reader").innerHTML = "";
   document.getElementById("resultado").innerHTML = "<p>🔄 Listo para nueva comparación</p>";
+
+  scannerActivo = false;
 }

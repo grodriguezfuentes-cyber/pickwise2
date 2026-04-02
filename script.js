@@ -28,6 +28,9 @@ async function comparar() {
   const score1 = calcularScore(p1);
   const score2 = calcularScore(p2);
 
+  const letra1 = convertirALetra(score1);
+  const letra2 = convertirALetra(score2);
+
   let mejor = "";
   let razon = "";
 
@@ -47,10 +50,10 @@ async function comparar() {
   document.getElementById("resultado").innerHTML = `
     <div>
       <h3>${p1.nombre}</h3>
-      <p>${score1}</p>
+      <p>${letra1}</p>
 
       <h3>${p2.nombre}</h3>
-      <p>${score2}</p>
+      <p>${letra2}</p>
 
       <h2>🏆 ${mejor}</h2>
       <p>${razon}</p>
@@ -74,19 +77,16 @@ function normalizarTexto(texto) {
 function buscarProductoInteligente(nombre) {
   let nombreNormalizado = normalizarTexto(nombre);
 
-  // 1. EXACTO
   let exacto = productos.find(p => 
     normalizarTexto(p.nombre) === nombreNormalizado
   );
   if (exacto) return exacto;
 
-  // 2. EMPIEZA POR
   let empieza = productos.find(p => 
     normalizarTexto(p.nombre).startsWith(nombreNormalizado)
   );
   if (empieza) return empieza;
 
-  // 3. CONTIENE
   let contiene = productos.find(p => 
     normalizarTexto(p.nombre).includes(nombreNormalizado)
   );
@@ -127,8 +127,16 @@ async function buscarProductoAPI(nombre) {
 function detectarCategoria(nombre) {
   const n = normalizarTexto(nombre);
 
-  if (n.includes("manzana") || n.includes("banana") || n.includes("pera") || n.includes("fruta") || n.includes("fresa") || n.includes("frambuesa") || n.includes("arandano"))
-    return "fruta";
+  if (
+    n.includes("manzana") ||
+    n.includes("banana") ||
+    n.includes("pera") ||
+    n.includes("fruta") ||
+    n.includes("fresa") ||
+    n.includes("frambuesa") ||
+    n.includes("arandano") ||
+    n.includes("naranja")
+  ) return "fruta";
 
   if (n.includes("leche") || n.includes("yogur") || n.includes("yogurt"))
     return "lacteo";
@@ -155,6 +163,10 @@ function calcularScore(p) {
   score += p.proteina * 2;
   score -= p.procesado * 2;
 
+  return score;
+}
+
+function convertirALetra(score) {
   if (score > 80) return "A";
   if (score > 60) return "B";
   if (score > 40) return "C";

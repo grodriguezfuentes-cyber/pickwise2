@@ -1,35 +1,44 @@
-// 🔍 Buscar producto en OpenFoodFacts API
+// 🔍 BUSCAR PRODUCTO (ROBUSTO)
 async function buscarProductoAPI(nombre) {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(nombre)}&search_simple=1&action=process&json=1&page_size=10`;
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(nombre)}&search_simple=1&action=process&json=1&page_size=20`;
 
     try {
         const response = await fetch(url);
         const data = await response.json();
 
-        console.log("Respuesta API:", data);
-
         if (!data.products || data.products.length === 0) {
             return null;
         }
 
-        // 🔥 coger el primer producto que tenga nombre (aunque falten datos)
+        // 🔥 FILTRO INTELIGENTE (clave)
+        let mejor = null;
+
         for (let p of data.products) {
-            if (p.product_name) {
-                let nutriments = p.nutriments || {};
 
-                return {
-                    name: p.product_name.toLowerCase(),
+            if (!p.product_name) continue;
 
-                    sugar: nutriments.sugars_100g || 0,
-                    fat: nutriments.fat_100g || 0,
-                    protein: nutriments.proteins_100g || 0,
-                    salt: nutriments.salt_100g || 0,
-                    fiber: nutriments.fiber_100g || 0
-                };
-            }
+            let nutriments = p.nutriments || {};
+
+            // ignorar basura sin datos reales
+            let sugar = nutriments.sugars_100g || 0;
+            let fat = nutriments.fat_100g || 0;
+            let protein = nutriments.proteins_100g || 0;
+
+            if (sugar === 0 && fat === 0 && protein === 0) continue;
+
+            mejor = {
+                name: limpiarNombre(p.product_name),
+                sugar: sugar,
+                fat: fat,
+                protein: protein,
+                salt: nutriments.salt_100g || 0,
+                fiber: nutriments.fiber_100g || 0
+            };
+
+            break;
         }
 
-        return null;
+        return mejor;
 
     } catch (error) {
         console.error("Error API:", error);
@@ -38,45 +47,66 @@ async function buscarProductoAPI(nombre) {
 }
 
 
-// 🧠 SCORE INTELIGENTE
-function calcularScore(p) {
-    let azucar = p.sugar || 0;
-    let grasa = p.fat || 0;
-    let proteina = p.protein || 0;
-    let sal = p.salt || 0;
-    let fibra = p.fiber || 0;
+// 🧼 LIMPIAR NOMBRE (MUY IMPORTANTE)
+function limpiarNombre(nombre) {
+    return nombre
+        .toLowerCase()
+        .replace(/[^a-zA-Z0-9áéíóúñ\s]/g, "")
+        .trim()
+        .slice(0, 50);
+}
 
+
+// 🧠 SCORE REALISTA (MEJORADO)
+function calcularScore(p) {
     let score = 0;
 
     // penalizaciones
-    score += azucar * 2;
-    score += grasa * 1.5;
-    score += sal * 2;
+    score += p.sugar * 2;
+    score += p.fat * 1.5;
+    score += p.salt * 2;
 
     // beneficios
-    score -= proteina * 1.5;
-    score -= fibra * 2;
+    score -= p.protein * 1.5;
+    score -= p.fiber * 2;
 
     return score;
 }
 
 
-// ⚖️ COMPARAR PRODUCTOS
+// 🧠 EXPLICACIÓN INTELIGENTE
+function generarExplicacion(mejor, peor) {
+    let texto = "";
+
+    if (mejor.sugar < peor.sugar) texto += "✔ Menos azúcar<br>";
+    if (mejor.fat < peor.fat) texto += "✔ Menos grasa<br>";
+    if (mejor.protein > peor.protein) texto += "✔ Más proteína<br>";
+    if (mejor.fiber > peor.fiber) texto += "✔ Más fibra<br>";
+    if (mejor.salt < peor.salt) texto += "✔ Menos sal<br>";
+
+    return texto || "✔ Mejor equilibrio nutricional";
+}
+
+
+// ⚖️ COMPARAR PRODUCTOS (FINAL)
 async function comparar() {
-    let p1 = document.getElementById("producto1").value;
-    let p2 = document.getElementById("producto2").value;
+    let input1 = document.getElementById("producto1").value.trim();
+    let input2 = document.getElementById("producto2").value.trim();
+
+    if (!input1 || !input2) {
+        document.getElementById("resultado").innerHTML =
+            "<p style='color:red;'>⚠️ Introduce ambos productos</p>";
+        return;
+    }
 
     document.getElementById("resultado").innerHTML = "⏳ Buscando productos...";
 
-    let prod1 = await buscarProductoAPI(p1);
-    let prod2 = await buscarProductoAPI(p2);
-
-    console.log("Producto 1:", prod1);
-    console.log("Producto 2:", prod2);
+    let prod1 = await buscarProductoAPI(input1);
+    let prod2 = await buscarProductoAPI(input2);
 
     if (!prod1 || !prod2) {
         document.getElementById("resultado").innerHTML =
-            "<p style='color:red;'>❌ No se encontraron productos</p>";
+            "<p style='color:red;'>❌ No se encontraron productos válidos</p>";
         return;
     }
 
@@ -86,51 +116,25 @@ async function comparar() {
     let mejor = score1 < score2 ? prod1 : prod2;
     let peor = score1 < score2 ? prod2 : prod1;
 
-    // 🧠 explicación inteligente
-    let explicacion = "";
+    let explicacion = generarExplicacion(mejor, peor);
 
-    if (mejor.sugar < peor.sugar) {
-        explicacion += "✔ Tiene menos azúcar<br>";
-    }
-
-    if (mejor.fat < peor.fat) {
-        explicacion += "✔ Tiene menos grasa<br>";
-    }
-
-    if (mejor.protein > peor.protein) {
-        explicacion += "✔ Tiene más proteína<br>";
-    }
-
-    if (mejor.fiber > peor.fiber) {
-        explicacion += "✔ Tiene más fibra<br>";
-    }
-
-    if (mejor.salt < peor.salt) {
-        explicacion += "✔ Tiene menos sal<br>";
-    }
-
-    // 📊 resultado final
     document.getElementById("resultado").innerHTML = `
-        <h3>🏆 Mejor opción: ${mejor.name}</h3>
-        <p>
-            Azúcar: ${mejor.sugar}g | 
-            Grasa: ${mejor.fat}g | 
-            Proteína: ${mejor.protein}g | 
-            Fibra: ${mejor.fiber}g | 
-            Sal: ${mejor.salt}g
-        </p>
+        <div class="card">
+            <h3>🏆 Mejor opción</h3>
+            <strong>${mejor.name}</strong>
+            <p>
+                Azúcar: ${mejor.sugar}g<br>
+                Grasa: ${mejor.fat}g<br>
+                Proteína: ${mejor.protein}g<br>
+                Fibra: ${mejor.fiber}g<br>
+                Sal: ${mejor.salt}g
+            </p>
+            <p>${explicacion}</p>
+        </div>
 
-        <div style="margin-top:10px;">${explicacion}</div>
-
-        <hr>
-
-        <h4>⚠️ Alternativa menos saludable: ${peor.name}</h4>
-        <p>
-            Azúcar: ${peor.sugar}g | 
-            Grasa: ${peor.fat}g | 
-            Proteína: ${peor.protein}g | 
-            Fibra: ${peor.fiber}g | 
-            Sal: ${peor.salt}g
-        </p>
+        <div class="card">
+            <h4>⚠️ Menos recomendable</h4>
+            <strong>${peor.name}</strong>
+        </div>
     `;
 }

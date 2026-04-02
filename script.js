@@ -1,6 +1,6 @@
-// 🔍 BUSCAR PRODUCTO (ROBUSTO)
+// 🔍 BUSCAR PRODUCTO (SIN FILTROS QUE ROMPAN TODO)
 async function buscarProductoAPI(nombre) {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(nombre)}&search_simple=1&action=process&json=1&page_size=20`;
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(nombre)}&search_simple=1&action=process&json=1&page_size=10`;
 
     try {
         const response = await fetch(url);
@@ -10,35 +10,20 @@ async function buscarProductoAPI(nombre) {
             return null;
         }
 
-        // 🔥 FILTRO INTELIGENTE (clave)
-        let mejor = null;
+        // 🔥 coger SIEMPRE el primer producto válido
+        let p = data.products[0];
 
-        for (let p of data.products) {
+        let nutriments = p.nutriments || {};
 
-            if (!p.product_name) continue;
+        return {
+            name: limpiarNombre(p.product_name || nombre),
 
-            let nutriments = p.nutriments || {};
-
-            // ignorar basura sin datos reales
-            let sugar = nutriments.sugars_100g || 0;
-            let fat = nutriments.fat_100g || 0;
-            let protein = nutriments.proteins_100g || 0;
-
-            if (sugar === 0 && fat === 0 && protein === 0) continue;
-
-            mejor = {
-                name: limpiarNombre(p.product_name),
-                sugar: sugar,
-                fat: fat,
-                protein: protein,
-                salt: nutriments.salt_100g || 0,
-                fiber: nutriments.fiber_100g || 0
-            };
-
-            break;
-        }
-
-        return mejor;
+            sugar: nutriments.sugars_100g || 0,
+            fat: nutriments.fat_100g || 0,
+            protein: nutriments.proteins_100g || 0,
+            salt: nutriments.salt_100g || 0,
+            fiber: nutriments.fiber_100g || 0
+        };
 
     } catch (error) {
         console.error("Error API:", error);
@@ -47,34 +32,23 @@ async function buscarProductoAPI(nombre) {
 }
 
 
-// 🧼 LIMPIAR NOMBRE (MUY IMPORTANTE)
+// 🧼 LIMPIAR NOMBRE
 function limpiarNombre(nombre) {
     return nombre
         .toLowerCase()
         .replace(/[^a-zA-Z0-9áéíóúñ\s]/g, "")
-        .trim()
-        .slice(0, 50);
+        .trim();
 }
 
 
-// 🧠 SCORE REALISTA (MEJORADO)
+// 🧠 SCORE SIMPLE PERO ESTABLE
 function calcularScore(p) {
-    let score = 0;
-
-    // penalizaciones
-    score += p.sugar * 2;
-    score += p.fat * 1.5;
-    score += p.salt * 2;
-
-    // beneficios
-    score -= p.protein * 1.5;
-    score -= p.fiber * 2;
-
-    return score;
+    return (p.sugar * 2) + (p.fat * 1.5) + (p.salt * 2)
+           - (p.protein * 1.5) - (p.fiber * 2);
 }
 
 
-// 🧠 EXPLICACIÓN INTELIGENTE
+// 🧠 EXPLICACIÓN
 function generarExplicacion(mejor, peor) {
     let texto = "";
 
@@ -84,11 +58,11 @@ function generarExplicacion(mejor, peor) {
     if (mejor.fiber > peor.fiber) texto += "✔ Más fibra<br>";
     if (mejor.salt < peor.salt) texto += "✔ Menos sal<br>";
 
-    return texto || "✔ Mejor equilibrio nutricional";
+    return texto || "✔ Mejor perfil nutricional";
 }
 
 
-// ⚖️ COMPARAR PRODUCTOS (FINAL)
+// ⚖️ COMPARAR (ROBUSTO)
 async function comparar() {
     let input1 = document.getElementById("producto1").value.trim();
     let input2 = document.getElementById("producto2").value.trim();
@@ -99,14 +73,14 @@ async function comparar() {
         return;
     }
 
-    document.getElementById("resultado").innerHTML = "⏳ Buscando productos...";
+    document.getElementById("resultado").innerHTML = "⏳ Buscando...";
 
     let prod1 = await buscarProductoAPI(input1);
     let prod2 = await buscarProductoAPI(input2);
 
     if (!prod1 || !prod2) {
         document.getElementById("resultado").innerHTML =
-            "<p style='color:red;'>❌ No se encontraron productos válidos</p>";
+            "<p style='color:red;'>❌ No se encontraron productos</p>";
         return;
     }
 

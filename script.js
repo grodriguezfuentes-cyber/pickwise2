@@ -4,6 +4,7 @@ let producto1 = null;
 let producto2 = null;
 
 function escanearProducto(numero) {
+  alert("Botón funciona " + numero);
   if (scannerActivo) return;
 
   scannerActivo = true;

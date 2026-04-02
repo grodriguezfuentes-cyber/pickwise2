@@ -12,6 +12,7 @@ fetch('productos.json')
 function detectarCategoria(nombre) {
   const n = nombre.toLowerCase();
 
+  // 🍎 FRUTA
   if (
     n.includes("manzana") ||
     n.includes("pera") ||
@@ -31,6 +32,7 @@ function detectarCategoria(nombre) {
     n.includes("blueberry")
   ) return "fruta";
 
+  // 🥤 BEBIDA
   if (
     n.includes("leche") ||
     n.includes("yogur") ||
@@ -39,6 +41,7 @@ function detectarCategoria(nombre) {
     n.includes("juice")
   ) return "bebida";
 
+  // 🍫 SNACK
   if (
     n.includes("chocolate") ||
     n.includes("galleta") ||
@@ -47,6 +50,16 @@ function detectarCategoria(nombre) {
     n.includes("snickers") ||
     n.includes("kitkat")
   ) return "snack";
+
+  // 🍝 CARBOHIDRATOS
+  if (
+    n.includes("arroz") ||
+    n.includes("pasta") ||
+    n.includes("tallarines") ||
+    n.includes("fideos") ||
+    n.includes("espagueti") ||
+    n.includes("espaguetis")
+  ) return "carbohidrato";
 
   return "otro";
 }
@@ -83,9 +96,15 @@ async function buscarProductoAPI(nombre) {
 
     const prod = candidatos[0];
 
+    // 🔥 limpiar nombre raro
+    let nombreFinal = prod.product_name || nombre;
+    if (nombreFinal.length > 30) {
+      nombreFinal = nombre;
+    }
+
     return {
-      nombre: prod.product_name || nombre,
-      categoria: detectarCategoria(prod.product_name || nombre),
+      nombre: nombreFinal,
+      categoria: detectarCategoria(nombreFinal),
       azucar: prod.nutriments?.sugars_100g || 0,
       grasa: prod.nutriments?.fat_100g || 0,
       proteina: prod.nutriments?.proteins_100g || 0,
@@ -134,17 +153,13 @@ function tieneDatos(p) {
 }
 
 
-// 🔥 ALTERNATIVA INTELIGENTE (FIX DEFINITIVO)
+// 🔥 ALTERNATIVA COHERENTE
 function sugerirAlternativa(p1, p2) {
 
   let categoria;
 
   if (p1.categoria === p2.categoria) {
     categoria = p1.categoria;
-  } else if (p1.categoria === "fruta" || p2.categoria === "fruta") {
-    categoria = "fruta";
-  } else if (p1.categoria === "snack" || p2.categoria === "snack") {
-    categoria = "snack";
   } else {
     categoria = p1.categoria;
   }

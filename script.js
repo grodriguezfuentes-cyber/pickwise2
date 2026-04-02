@@ -52,7 +52,7 @@ async function buscarProductoAPI(nombre) {
 
     return {
       nombre: prod.product_name || nombre,
-      categoria: "otro",
+      categoria: detectarCategoria(prod.product_name || nombre),
       azucar: prod.nutriments?.sugars_100g || 0,
       grasa: prod.nutriments?.fat_100g || 0,
       proteina: prod.nutriments?.proteins_100g || 0,
@@ -63,6 +63,44 @@ async function buscarProductoAPI(nombre) {
     console.error("Error API:", error);
     return null;
   }
+}
+function detectarCategoria(nombre) {
+  const n = nombre.toLowerCase();
+
+  if (
+    n.includes("manzana") ||
+    n.includes("pera") ||
+    n.includes("platano") ||
+    n.includes("banana") ||
+    n.includes("fresa") ||
+    n.includes("frambuesa") ||
+    n.includes("naranja") ||
+    n.includes("melon") ||
+    n.includes("sandia")
+  ) {
+    return "fruta";
+  }
+
+  if (
+    n.includes("leche") ||
+    n.includes("yogur") ||
+    n.includes("bebida") ||
+    n.includes("zumo") ||
+    n.includes("juice")
+  ) {
+    return "bebida";
+  }
+
+  if (
+    n.includes("chocolate") ||
+    n.includes("galleta") ||
+    n.includes("snack") ||
+    n.includes("barrita")
+  ) {
+    return "snack";
+  }
+
+  return "otro";
 }
 
 

@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ScanWise</title>
 
+  <!-- CSS -->
   <link rel="stylesheet" href="styles.css">
+
+  <!-- ICONO -->
+  <link rel="icon" href="icon.png">
+
+  <!-- ESCÁNER -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
@@ -13,30 +19,42 @@
 
 <div class="container">
 
-  <h1 class="logo">Scan<span>Wise</span></h1>
+  <!-- LOGO -->
+  <div class="logo-container">
+    <img src="icon.png" class="logo-img">
+    <h1 class="logo-text">Scan<span>Wise</span></h1>
+  </div>
+
+  <!-- SUBTÍTULO -->
   <p class="subtitle">Escanea. Compara. Decide mejor.</p>
 
+  <!-- INSTRUCCIONES -->
   <div class="instructions">
     ✨ Escanea 2 productos y descubre cuál es mejor
   </div>
 
+  <!-- BOTONES -->
   <button class="btn primary" onclick="escanearProducto(1)">
-    Escanear producto 1
+    📷 Escanear producto 1
   </button>
 
   <button class="btn secondary" onclick="escanearProducto(2)">
-    Escanear producto 2
+    📷 Escanear producto 2
   </button>
 
   <button class="btn reset" onclick="reiniciar()">
-    Reiniciar
+    🔄 Reiniciar
   </button>
 
+  <!-- SCANNER -->
   <div id="reader"></div>
+
+  <!-- RESULTADOS -->
   <div id="resultado"></div>
 
 </div>
 
+<!-- SCRIPT -->
 <script src="script.js"></script>
 
 </body>

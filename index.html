@@ -11,6 +11,15 @@
   <!-- ICONO -->
   <link rel="icon" href="icon.png">
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#8b5cf6">
+
+  <!-- iPhone soporte -->
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <!-- ESCÁNER -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
@@ -21,7 +30,7 @@
 
   <!-- LOGO -->
   <div class="logo-container">
-    <img src="icon.png" class="logo-img">
+    <img src="icon.png" class="logo-img fixed">
     <h1 class="logo-text">Scan<span>Wise</span></h1>
   </div>
 
@@ -54,8 +63,15 @@
 
 </div>
 
-<!-- SCRIPT -->
+<!-- SCRIPT PRINCIPAL -->
 <script src="script.js"></script>
+
+<!-- SERVICE WORKER -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
 
 </body>
 </html>

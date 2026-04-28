@@ -9,32 +9,42 @@
 
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #f2f2f2;
       margin: 0;
-      padding: 20px;
-      text-align: center;
+      padding: 0;
     }
 
     .container {
-      max-width: 400px;
+      max-width: 420px;
       margin: auto;
+      padding: 20px;
     }
 
     h1 {
+      text-align: center;
       margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
     }
 
     button {
       width: 100%;
       padding: 15px;
       margin-top: 10px;
-      border-radius: 12px;
       border: none;
-      background: black;
-      color: white;
+      border-radius: 12px;
       font-size: 16px;
+      font-weight: bold;
     }
+
+    .btn1 { background: #000; color: white; }
+    .btn2 { background: #444; color: white; }
+    .btnReset { background: #ddd; }
 
     #reader {
       margin-top: 20px;
@@ -44,9 +54,8 @@
       background: white;
       padding: 15px;
       margin-top: 20px;
-      border-radius: 16px;
-      text-align: left;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
 
     .score {
@@ -55,15 +64,15 @@
       margin-top: 10px;
     }
 
-    .verde { color: green; }
-    .amarillo { color: orange; }
-    .rojo { color: red; }
+    .verde { color: #2ecc71; }
+    .amarillo { color: #f39c12; }
+    .rojo { color: #e74c3c; }
 
-    .titulo {
-      font-weight: bold;
-      margin-bottom: 5px;
+    .historial-item {
+      font-size: 14px;
+      border-bottom: 1px solid #eee;
+      padding: 5px 0;
     }
-
   </style>
 </head>
 
@@ -71,11 +80,11 @@
 
 <div class="container">
   <h1>PickWise 🛒</h1>
-  <p>Escanea y elige mejor</p>
+  <p class="subtitle">Escanea 2 productos y elige mejor</p>
 
-  <button onclick="escanearProducto(1)">📷 Escanear producto 1</button>
-  <button onclick="escanearProducto(2)">📷 Escanear producto 2</button>
-  <button onclick="reiniciar()">🔄 Reiniciar</button>
+  <button class="btn1" onclick="escanearProducto(1)">📷 Escanear producto 1</button>
+  <button class="btn2" onclick="escanearProducto(2)">📷 Escanear producto 2</button>
+  <button class="btnReset" onclick="reiniciar()">🔄 Reiniciar</button>
 
   <div id="reader"></div>
   <div id="resultado"></div>

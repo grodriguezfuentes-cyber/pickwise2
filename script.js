@@ -3,7 +3,8 @@ let producto2 = null;
 let scannerActivo = false;
 let html5QrCode = null;
 
-let historial = [];
+// 📦 HISTORIAL PERSISTENTE
+let historial = JSON.parse(localStorage.getItem("historial")) || [];
 
 
 // 📷 ESCANEAR
@@ -23,24 +24,18 @@ function escanearProducto(numero) {
       scannerActivo = false;
 
       const producto = await buscarProducto(codigo);
-
       if (!producto) return;
 
       if (numero === 1) producto1 = producto;
       else producto2 = producto;
 
-      // 👉 MOSTRAR ESTADO (CLAVE)
       mostrarEstado();
 
       if (producto1 && producto2) {
         compararProductos();
       }
-    },
-
-    () => {}
-  ).catch(err => {
-    console.error("Error cámara:", err);
-  });
+    }
+  ).catch(err => console.error(err));
 }
 
 
@@ -93,7 +88,7 @@ function obtenerColor(score) {
 }
 
 
-// 🧠 EXPLICACIÓN INTELIGENTE
+// 🧠 EXPLICACIÓN
 function generarExplicacion(mejor, peor) {
   let razones = [];
 
@@ -102,37 +97,28 @@ function generarExplicacion(mejor, peor) {
   if (mejor.sal < peor.sal) razones.push("menos sal");
   if (mejor.fibra > peor.fibra) razones.push("más fibra");
 
-  if (razones.length === 0) {
-    return "Este producto tiene un perfil nutricional más equilibrado.";
-  }
+  if (razones.length === 0) return "Perfil nutricional más equilibrado.";
 
-  let texto = "Este producto es mejor porque tiene ";
-
-  if (razones.length === 1) {
-    texto += razones[0];
-  } else {
-    texto += razones.slice(0, -1).join(", ") + " y " + razones[razones.length - 1];
-  }
-
-  return texto + ".";
+  return "Mejor porque tiene " +
+    razones.join(", ").replace(/, ([^,]*)$/, " y $1");
 }
 
 
-// 🧾 MOSTRAR ESTADO (IMPORTANTE)
+// 🧾 ESTADO
 function mostrarEstado() {
   const r = document.getElementById("resultado");
 
   r.innerHTML = `
     <div class="card">
-      <div><strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "No escaneado"}</div>
-      <div><strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "No escaneado"}</div>
+      <strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "No escaneado"}<br>
+      <strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "No escaneado"}<br>
       ${producto1 && !producto2 ? "<p>👉 Escanea el segundo producto</p>" : ""}
     </div>
   `;
 }
 
 
-// ⚖️ COMPARAR
+// ⚖️ COMPARAR + GUARDAR HISTORIAL
 function compararProductos() {
   const r = document.getElementById("resultado");
 
@@ -150,43 +136,27 @@ function compararProductos() {
 
   const explicacion = generarExplicacion(mejor, peor);
 
-  // 📊 HISTORIAL
+  // 💾 GUARDAR HISTORIAL
   historial.unshift(`${mejor.nombre} > ${peor.nombre}`);
+  localStorage.setItem("historial", JSON.stringify(historial));
 
   r.innerHTML = `
     <div class="card">
       <h2>🏆 Mejor opción</h2>
       <strong>${mejor.nombre}</strong>
       <div class="score ${colorMejor}">${scoreMejor}/100</div>
-
       <p><strong>${explicacion}</strong></p>
-
-      <p>
-        Azúcar: ${mejor.azucar}g<br>
-        Grasa: ${mejor.grasa}g<br>
-        Proteína: ${mejor.proteina}g<br>
-        Fibra: ${mejor.fibra}g<br>
-        Sal: ${mejor.sal}g
-      </p>
     </div>
 
     <div class="card">
       <h3>⚠️ Menos recomendable</h3>
       <strong>${peor.nombre}</strong>
       <div class="score ${colorPeor}">${scorePeor}/100</div>
-
-      <p>
-        Azúcar: ${peor.azucar}g<br>
-        Grasa: ${peor.grasa}g<br>
-        Proteína: ${peor.proteina}g<br>
-        Fibra: ${peor.fibra}g<br>
-        Sal: ${peor.sal}g
-      </p>
     </div>
 
     <div class="card">
       <h3>📊 Historial</h3>
-      ${historial.map(h => `<p>${h}</p>`).join("")}
+      ${historial.map(h => `<div class="historial-item">${h}</div>`).join("")}
     </div>
   `;
 }

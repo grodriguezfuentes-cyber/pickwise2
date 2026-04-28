@@ -9,7 +9,6 @@ let cache = JSON.parse(localStorage.getItem("productos")) || {};
 function escanearProducto(numero) {
 
   const reader = document.getElementById("reader");
-
   reader.innerHTML = "<p class='status'>📷 Activando cámara...</p>";
 
   if (scanner) {
@@ -52,10 +51,9 @@ function escanearProducto(numero) {
 }
 
 
-// 🔎 BUSCAR PRODUCTO (OPTIMIZADO)
+// 🔎 BUSCAR PRODUCTO
 function buscarProducto(barcode, numero) {
 
-  // 🧠 PRIMERO BUSCA EN CACHE
   if (cache[barcode]) {
     procesarProducto(cache[barcode], numero);
     return;
@@ -77,6 +75,7 @@ function buscarProducto(barcode, numero) {
 
       const producto = {
         nombre: p.product_name || "Sin nombre",
+        calorias: parseFloat(p.nutriments?.["energy-kcal_100g"]) || 0,
         azucar: parseFloat(p.nutriments?.sugars_100g) || 0,
         grasa: parseFloat(p.nutriments?.fat_100g) || 0,
         proteina: parseFloat(p.nutriments?.proteins_100g) || 0,
@@ -84,7 +83,6 @@ function buscarProducto(barcode, numero) {
         sal: parseFloat(p.nutriments?.salt_100g) || 0
       };
 
-      // 💾 GUARDAR EN CACHE
       cache[barcode] = producto;
       localStorage.setItem("productos", JSON.stringify(cache));
 
@@ -93,7 +91,7 @@ function buscarProducto(barcode, numero) {
 }
 
 
-// 🧠 PROCESAR PRODUCTO
+// 🧠 PROCESAR
 function procesarProducto(producto, numero) {
 
   if (numero === 1) {
@@ -139,27 +137,41 @@ function comparar() {
     perdedor = producto1;
   }
 
+  // 💥 FRASE INTELIGENTE
+  let mensaje = "";
+
+  if (ganador.calorias < perdedor.calorias) {
+    mensaje = "🔥 Tiene menos calorías";
+  } else if (ganador.azucar < perdedor.azucar) {
+    mensaje = "🍬 Tiene menos azúcar";
+  } else {
+    mensaje = "👍 Mejor perfil nutricional";
+  }
+
   document.getElementById("resultado").innerHTML = `
     <div class="card winner">
       <h3>🏆 Mejor opción</h3>
       <p><strong>${ganador.nombre}</strong></p>
-      <p>Azúcar: ${ganador.azucar}g</p>
-      <p>Grasa: ${ganador.grasa}g</p>
-      <p>Proteína: ${ganador.proteina}g</p>
-      <p>Fibra: ${ganador.fibra}g</p>
-      <p>Sal: ${ganador.sal}g</p>
-      <p class="score verde">${Math.round(score(ganador))}</p>
+      <p class="calorias">🔥 ${ganador.calorias} kcal</p>
+      <p class="mensaje">${mensaje}</p>
+
+      <small>
+        Azúcar: ${ganador.azucar}g · 
+        Grasa: ${ganador.grasa}g · 
+        Proteína: ${ganador.proteina}g
+      </small>
     </div>
 
     <div class="card loser">
       <h3>⚠️ Menos recomendable</h3>
       <p><strong>${perdedor.nombre}</strong></p>
-      <p>Azúcar: ${perdedor.azucar}g</p>
-      <p>Grasa: ${perdedor.grasa}g</p>
-      <p>Proteína: ${perdedor.proteina}g</p>
-      <p>Fibra: ${perdedor.fibra}g</p>
-      <p>Sal: ${perdedor.sal}g</p>
-      <p class="score rojo">${Math.round(score(perdedor))}</p>
+      <p class="calorias">🔥 ${perdedor.calorias} kcal</p>
+
+      <small>
+        Azúcar: ${perdedor.azucar}g · 
+        Grasa: ${perdedor.grasa}g · 
+        Proteína: ${perdedor.proteina}g
+      </small>
     </div>
   `;
 }

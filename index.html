@@ -5,7 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ScanWise</title>
 
+  <!-- CSS -->
   <link rel="stylesheet" href="styles.css">
+
+  <!-- 🔥 PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#8b5cf6">
+
+  <!-- iPhone soporte -->
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <!-- Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
@@ -48,7 +59,14 @@
 
 </div>
 
-<script src="script.js?v=5"></script>
+<script src="script.js?v=10"></script>
+
+<!-- 🔥 SERVICE WORKER -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
 
 </body>
 </html>

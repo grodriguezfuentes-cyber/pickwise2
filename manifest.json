@@ -1,7 +1,7 @@
 {
   "name": "ScanWise",
   "short_name": "ScanWise",
-  "start_url": ".",
+  "start_url": "/pickwise2/",
   "display": "standalone",
   "background_color": "#f9fafc",
   "theme_color": "#8b5cf6",

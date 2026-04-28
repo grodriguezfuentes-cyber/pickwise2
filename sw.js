@@ -1,4 +1,4 @@
-const CACHE_NAME = "scanwise-v4";
+const CACHE_NAME = "scanwise-v5";
 
 const urlsToCache = [
   "/pickwise2/",
@@ -20,22 +20,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// FETCH INTELIGENTE (NO ROMPE NADA)
+// FETCH
 self.addEventListener("fetch", (event) => {
-
   const url = new URL(event.request.url);
 
-  // 🚫 NO tocar recursos externos (API, librerías, etc.)
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
+  if (event.request.method !== "GET") return;
 
-  // 🚫 NO tocar peticiones dinámicas (por seguridad)
-  if (event.request.method !== "GET") {
-    return;
-  }
-
-  // ✅ SOLO cachear tu app
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);

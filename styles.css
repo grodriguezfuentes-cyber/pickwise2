@@ -1,10 +1,11 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f6f8fb;
+  background: linear-gradient(180deg, #f9fafc, #eef2ff);
   margin: 0;
-  color: #0f172a;
+  color: #111827;
 }
 
+/* CONTENEDOR */
 .container {
   max-width: 420px;
   margin: auto;
@@ -12,35 +13,40 @@ body {
   text-align: center;
 }
 
-/* TITULO */
-h1 {
-  font-size: 28px;
+/* LOGO */
+.logo {
+  font-size: 30px;
   font-weight: 700;
-  margin-bottom: 5px;
 }
 
+.logo span {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* SUBTÍTULO */
 .subtitle {
-  color: #64748b;
-  font-size: 15px;
+  color: #6b7280;
   margin-bottom: 20px;
 }
 
-/* INSTRUCCIONES */
+/* CAJA INFO */
 .instructions {
-  background: #ffffff;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(10px);
   padding: 14px;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: 14px;
   margin-bottom: 20px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+  font-size: 14px;
 }
 
-/* BOTONES */
-button {
+/* BOTONES BASE */
+.btn {
   width: 100%;
-  padding: 15px;
+  padding: 16px;
   margin-top: 12px;
-  border-radius: 14px;
+  border-radius: 16px;
   border: none;
   font-size: 16px;
   font-weight: 600;
@@ -48,29 +54,30 @@ button {
   cursor: pointer;
 }
 
-/* EFECTO */
-button:hover {
+/* EFECTO APPLE */
+.btn:hover {
   transform: translateY(-2px);
+  filter: brightness(1.05);
 }
 
-/* BOTÓN PRINCIPAL */
-.btn1 {
-  background: linear-gradient(135deg, #34d399, #059669);
+/* BOTÓN 1 */
+.primary {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
   color: white;
-  box-shadow: 0 6px 14px rgba(52, 211, 153, 0.3);
+  box-shadow: 0 8px 20px rgba(139,92,246,0.35);
 }
 
-/* BOTÓN SECUNDARIO */
-.btn2 {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+/* BOTÓN 2 */
+.secondary {
+  background: linear-gradient(135deg, #ec4899, #f43f5e);
   color: white;
-  box-shadow: 0 6px 14px rgba(96, 165, 250, 0.3);
+  box-shadow: 0 8px 20px rgba(236,72,153,0.35);
 }
 
 /* RESET */
-.btnReset {
-  background: #e2e8f0;
-  color: #0f172a;
+.reset {
+  background: #e5e7eb;
+  color: #111827;
 }
 
 /* SCANNER */
@@ -80,26 +87,26 @@ button:hover {
   overflow: hidden;
 }
 
-/* TARJETAS */
+/* TARJETAS RESULTADO */
 .card {
-  background: white;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(12px);
   padding: 18px;
   margin-top: 16px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
   text-align: left;
   animation: fadeIn 0.4s ease;
 }
 
 /* GANADOR */
 .winner {
-  border-left: 5px solid #34d399;
+  border-left: 5px solid #8b5cf6;
 }
 
 /* PERDEDOR */
 .loser {
-  border-left: 5px solid #f87171;
-  opacity: 0.95;
+  border-left: 5px solid #f43f5e;
 }
 
 /* SCORE */
@@ -109,30 +116,16 @@ button:hover {
   margin-top: 8px;
 }
 
-.verde { color: #059669; }
+/* COLORES SCORE */
+.verde { color: #22c55e; }
 .amarillo { color: #f59e0b; }
 .rojo { color: #ef4444; }
 
-/* EXPLICACIÓN */
+/* TEXTO EXPLICACIÓN */
 .explain {
   margin-top: 10px;
   font-weight: 600;
-  color: #334155;
-}
-
-/* HISTORIAL */
-.historial-item {
-  font-size: 13px;
-  padding: 6px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* STATUS */
-.status {
-  text-align: center;
-  font-size: 14px;
-  color: #64748b;
-  margin-top: 10px;
+  color: #374151;
 }
 
 /* ANIMACIÓN */

@@ -1,219 +1,141 @@
 let producto1 = null;
 let producto2 = null;
-let scannerActivo = false;
-let html5QrCode = null;
+let scanner = null;
+let escaneando = false;
 
-// 📦 historial persistente
-let historial = JSON.parse(localStorage.getItem("historial")) || [];
-
-
-// 📷 ESCANEAR
 function escanearProducto(numero) {
-  if (scannerActivo) return;
 
-  scannerActivo = true;
+  if (escaneando) return;
 
-  document.getElementById("resultado").innerHTML =
-    "<div class='status'>📷 Escaneando...</div>";
+  escaneando = true;
 
-  html5QrCode = new Html5Qrcode("reader");
+  const reader = document.getElementById("reader");
+  reader.innerHTML = "";
 
-  html5QrCode.start(
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
     { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
+    {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      aspectRatio: 1.0
+    },
+    (decodedText) => {
 
-    async (codigo) => {
-      await html5QrCode.stop();
-      scannerActivo = false;
+      scanner.stop().then(() => {
+        escaneando = false;
+        reader.innerHTML = "";
+      });
 
-      const producto = await buscarProducto(codigo);
-      if (!producto) {
-        document.getElementById("resultado").innerHTML =
-          "<div class='status'>❌ Producto no encontrado</div>";
+      buscarProducto(decodedText, numero);
+    },
+    (error) => {
+      // silencioso (importante en iPhone)
+    }
+  );
+}
+
+// 🔎 BUSCAR PRODUCTO EN OPEN FOOD FACTS
+function buscarProducto(barcode, numero) {
+
+  fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
+    .then(res => res.json())
+    .then(data => {
+
+      if (!data.product) {
+        mostrarError("Producto no encontrado");
         return;
       }
 
+      const p = data.product;
+
+      const producto = {
+        nombre: p.product_name || "Sin nombre",
+        azucar: parseFloat(p.nutriments?.sugars_100g) || 0,
+        grasa: parseFloat(p.nutriments?.fat_100g) || 0,
+        proteina: parseFloat(p.nutriments?.proteins_100g) || 0,
+        fibra: parseFloat(p.nutriments?.fiber_100g) || 0,
+        sal: parseFloat(p.nutriments?.salt_100g) || 0
+      };
+
       if (numero === 1) {
         producto1 = producto;
-        mostrarEstado("Producto 1 añadido ✔️");
       } else {
         producto2 = producto;
-        mostrarEstado("Producto 2 añadido ✔️");
       }
 
       if (producto1 && producto2) {
-        compararProductos();
+        comparar();
+      } else {
+        document.getElementById("resultado").innerHTML =
+          `<p class="status">✔ Producto ${numero} escaneado. Falta el otro.</p>`;
       }
-    }
-  ).catch(err => console.error("Error cámara:", err));
+    });
 }
 
-
-// 🔍 API + TIPO
-async function buscarProducto(codigo) {
-  try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
-    const data = await res.json();
-
-    if (data.status === 0) return null;
-
-    const p = data.product;
-    const nombre = p.product_name || "Producto";
-
-    return {
-      nombre,
-      tipo: detectarTipo(nombre),
-
-      azucar: p.nutriments?.sugars_100g ?? 0,
-      grasa: p.nutriments?.fat_100g ?? 0,
-      proteina: p.nutriments?.proteins_100g ?? 0,
-      fibra: p.nutriments?.fiber_100g ?? 0,
-      sal: p.nutriments?.salt_100g ?? 0
-    };
-
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
+// 🧠 ALGORITMO MEJORADO
+function score(p) {
+  return (
+    (p.proteina * 2) +
+    (p.fibra * 2) -
+    (p.azucar * 1.5) -
+    (p.grasa * 1.2) -
+    (p.sal * 1.5)
+  );
 }
-
-
-// 🧠 DETECTAR TIPO
-function detectarTipo(nombre) {
-  nombre = nombre.toLowerCase();
-
-  if (nombre.includes("cola") || nombre.includes("juice") || nombre.includes("drink"))
-    return "bebida";
-
-  if (nombre.includes("chocolate") || nombre.includes("cookie") || nombre.includes("snack"))
-    return "snack";
-
-  if (nombre.includes("leche") || nombre.includes("milk") || nombre.includes("yogur"))
-    return "lacteo";
-
-  return "general";
-}
-
-
-// 🧠 SCORE INTELIGENTE
-function calcularScore(p) {
-  let score = 100;
-
-  if (p.tipo === "bebida") {
-    score -= p.azucar * 2.5;
-  } 
-  else if (p.tipo === "snack") {
-    score -= p.azucar * 1.5;
-    score -= p.grasa * 2;
-  } 
-  else if (p.tipo === "lacteo") {
-    score += p.proteina * 2.5;
-    score -= p.grasa * 1;
-  } 
-  else {
-    score -= p.azucar * 1.2;
-    score -= p.grasa * 1.5;
-  }
-
-  score -= p.sal * 2;
-  score += p.fibra * 1.5;
-
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
-
-
-// 🎨 COLOR
-function obtenerColor(score) {
-  if (score >= 70) return "verde";
-  if (score >= 40) return "amarillo";
-  return "rojo";
-}
-
-
-// 🧠 EXPLICACIÓN INTELIGENTE
-function generarExplicacion(mejor, peor) {
-  let razones = [];
-
-  if (mejor.azucar < peor.azucar) razones.push("menos azúcar");
-  if (mejor.proteina > peor.proteina) razones.push("más proteína");
-  if (mejor.sal < peor.sal) razones.push("menos sal");
-  if (mejor.fibra > peor.fibra) razones.push("más fibra");
-
-  if (razones.length === 0) return "✔ Mejor equilibrio nutricional";
-
-  return "✔ Tiene " +
-    razones.join(", ").replace(/, ([^,]*)$/, " y $1");
-}
-
-
-// 🧾 ESTADO
-function mostrarEstado(msg) {
-  document.getElementById("resultado").innerHTML = `
-    <div class="card">
-      <strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "—"}<br>
-      <strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "—"}<br>
-      <div class="status">${msg}</div>
-    </div>
-  `;
-}
-
 
 // ⚖️ COMPARAR
-function compararProductos() {
-  const r = document.getElementById("resultado");
+function comparar() {
 
-  const score1 = calcularScore(producto1);
-  const score2 = calcularScore(producto2);
+  const s1 = score(producto1);
+  const s2 = score(producto2);
 
-  const mejor = score1 > score2 ? producto1 : producto2;
-  const peor = score1 > score2 ? producto2 : producto1;
+  let ganador, perdedor;
 
-  const scoreMejor = Math.max(score1, score2);
-  const scorePeor = Math.min(score1, score2);
+  if (s1 > s2) {
+    ganador = producto1;
+    perdedor = producto2;
+  } else {
+    ganador = producto2;
+    perdedor = producto1;
+  }
 
-  const colorMejor = obtenerColor(scoreMejor);
-  const colorPeor = obtenerColor(scorePeor);
-
-  const explicacion = generarExplicacion(mejor, peor);
-
-  // 💾 guardar historial
-  historial.unshift(`${mejor.nombre} > ${peor.nombre}`);
-  localStorage.setItem("historial", JSON.stringify(historial));
-
-  r.innerHTML = `
+  document.getElementById("resultado").innerHTML = `
     <div class="card winner">
-      <h2>🏆 Mejor opción</h2>
-      <strong>${mejor.nombre}</strong>
-      <div class="score ${colorMejor}">${scoreMejor}/100</div>
-      <div class="explain">${explicacion}</div>
+      <h3>🏆 Mejor opción</h3>
+      <p><strong>${ganador.nombre}</strong></p>
+      <p>Azúcar: ${ganador.azucar}g</p>
+      <p>Grasa: ${ganador.grasa}g</p>
+      <p>Proteína: ${ganador.proteina}g</p>
+      <p>Fibra: ${ganador.fibra}g</p>
+      <p>Sal: ${ganador.sal}g</p>
+      <p class="score verde">${Math.round(score(ganador))}</p>
     </div>
 
     <div class="card loser">
       <h3>⚠️ Menos recomendable</h3>
-      <strong>${peor.nombre}</strong>
-      <div class="score ${colorPeor}">${scorePeor}/100</div>
-    </div>
-
-    <div class="card">
-      <h3>📊 Historial</h3>
-      ${historial.map(h => `<div class="historial-item">${h}</div>`).join("")}
+      <p><strong>${perdedor.nombre}</strong></p>
+      <p>Azúcar: ${perdedor.azucar}g</p>
+      <p>Grasa: ${perdedor.grasa}g</p>
+      <p>Proteína: ${perdedor.proteina}g</p>
+      <p>Fibra: ${perdedor.fibra}g</p>
+      <p>Sal: ${perdedor.sal}g</p>
+      <p class="score rojo">${Math.round(score(perdedor))}</p>
     </div>
   `;
 }
-
 
 // 🔄 REINICIAR
 function reiniciar() {
   producto1 = null;
   producto2 = null;
-
-  if (html5QrCode) {
-    try { html5QrCode.stop(); } catch {}
-  }
-
+  document.getElementById("resultado").innerHTML = "";
   document.getElementById("reader").innerHTML = "";
-  document.getElementById("resultado").innerHTML =
-    "<div class='status'>🔄 Listo para empezar</div>";
+}
 
-  scannerActivo = false;
+// ❌ ERROR
+function mostrarError(msg) {
+  document.getElementById("resultado").innerHTML =
+    `<p style="color:red">${msg}</p>`;
 }

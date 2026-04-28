@@ -27,6 +27,7 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 14px;
+  object-fit: cover;
   box-shadow: 0 6px 14px rgba(0,0,0,0.1);
 }
 
@@ -59,7 +60,7 @@ body {
   box-shadow: 0 8px 20px rgba(0,0,0,0.05);
 }
 
-/* BOTONES BASE */
+/* BOTONES */
 .btn {
   width: 100%;
   padding: 16px;
@@ -72,7 +73,6 @@ body {
   cursor: pointer;
 }
 
-/* EFECTO */
 .btn:hover {
   transform: translateY(-2px);
   filter: brightness(1.05);
@@ -109,7 +109,7 @@ body {
   overflow: hidden;
 }
 
-/* TARJETAS */
+/* TARJETAS RESULTADO */
 .card {
   background: rgba(255,255,255,0.85);
   backdrop-filter: blur(14px);

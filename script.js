@@ -23,12 +23,7 @@ function escanearProducto(numero) {
       { facingMode: "environment" },
       {
         fps: 10,
-        qrbox: { width: 300, height: 150 },
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.CODE_128
-        ]
+        qrbox: 250
       },
       (decodedText) => {
 
@@ -39,8 +34,14 @@ function escanearProducto(numero) {
         });
 
         buscarProducto(decodedText, numero);
+      },
+      (errorMessage) => {
+        // este error es normal mientras busca código → ignorar
       }
-    );
+    ).catch(err => {
+      console.error("Error cámara:", err);
+      reader.innerHTML = "❌ No se pudo acceder a la cámara";
+    });
 
   }, 300);
 }

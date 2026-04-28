@@ -13,19 +13,42 @@
 
 <div class="container">
 
-  <h1>ScanWise</h1>
-  <p>Escanea. Compara. Decide mejor.</p>
+  <!-- LOGO -->
+  <div class="logo-container">
+    <img src="icon.png" class="logo-img">
+    <div class="logo-text">Scan<span>Wise</span></div>
+  </div>
 
-  <button onclick="escanearProducto(1)">📷 Escanear producto 1</button>
-  <button onclick="escanearProducto(2)">📷 Escanear producto 2</button>
-  <button onclick="reiniciar()">🔄 Reiniciar</button>
+  <!-- SUBTITULO -->
+  <p class="subtitle">Escanea. Compara. Decide mejor.</p>
 
+  <!-- INSTRUCCIONES -->
+  <div class="instructions">
+    ✨ Escanea 2 productos y descubre cuál es mejor
+  </div>
+
+  <!-- BOTONES -->
+  <button class="btn primary" onclick="escanearProducto(1)">
+    📷 Escanear producto 1
+  </button>
+
+  <button class="btn secondary" onclick="escanearProducto(2)">
+    📷 Escanear producto 2
+  </button>
+
+  <button class="btn reset" onclick="reiniciar()">
+    🔄 Reiniciar
+  </button>
+
+  <!-- SCANNER -->
   <div id="reader"></div>
+
+  <!-- RESULTADO -->
   <div id="resultado"></div>
 
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=5"></script>
 
 </body>
 </html>

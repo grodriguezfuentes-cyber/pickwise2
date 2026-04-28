@@ -73,9 +73,16 @@ function buscarProducto(barcode, numero) {
 
       const p = data.product;
 
+      // 🔥 FIX CALORÍAS (kcal o kJ)
+      let kcal = p.nutriments?.["energy-kcal_100g"];
+
+      if (!kcal && p.nutriments?.energy_100g) {
+        kcal = p.nutriments.energy_100g / 4.184;
+      }
+
       const producto = {
         nombre: p.product_name || "Sin nombre",
-        calorias: parseFloat(p.nutriments?.["energy-kcal_100g"]) || 0,
+        calorias: Math.round(kcal || 0),
         azucar: parseFloat(p.nutriments?.sugars_100g) || 0,
         grasa: parseFloat(p.nutriments?.fat_100g) || 0,
         proteina: parseFloat(p.nutriments?.proteins_100g) || 0,

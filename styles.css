@@ -177,3 +177,8 @@ body {
     transform: translateY(0);
   }
 }
+.badge {
+  margin-top: 8px;
+  font-weight: bold;
+  font-size: 14px;
+}

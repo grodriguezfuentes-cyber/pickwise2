@@ -58,9 +58,8 @@ async function buscarProducto(codigo) {
     const p = data.product;
     const nombre = p.product_name || "Producto";
 
-    // 🔥 CALORÍAS (nuevo, sin romper nada)
+    // 🔥 CALORÍAS
     let kcal = p.nutriments?.["energy-kcal_100g"];
-
     if (!kcal && p.nutriments?.energy_100g) {
       kcal = p.nutriments.energy_100g / 4.184;
     }
@@ -100,24 +99,24 @@ function detectarTipo(nombre) {
   return "general";
 }
 
-// 🧠 SCORE INTELIGENTE
+// 🧠 SCORE MÁS CONTUNDENTE
 function calcularScore(p) {
   let score = 100;
 
   if (p.tipo === "bebida") {
-    score -= p.azucar * 2.5;
+    score -= p.azucar * 5;
   } 
   else if (p.tipo === "snack") {
-    score -= p.azucar * 1.5;
-    score -= p.grasa * 2;
+    score -= p.azucar * 3;
+    score -= p.grasa * 3;
   } 
   else if (p.tipo === "lacteo") {
     score += p.proteina * 2.5;
-    score -= p.grasa * 1;
+    score -= p.grasa * 2;
   } 
   else {
-    score -= p.azucar * 1.2;
-    score -= p.grasa * 1.5;
+    score -= p.azucar * 2;
+    score -= p.grasa * 2;
   }
 
   score -= p.sal * 2;
@@ -133,19 +132,30 @@ function obtenerColor(score) {
   return "rojo";
 }
 
-// 🧠 EXPLICACIÓN INTELIGENTE
+// 🔥 EXPLICACIÓN IMPACTANTE
 function generarExplicacion(mejor, peor) {
-  let razones = [];
 
-  if (mejor.azucar < peor.azucar) razones.push("menos azúcar");
-  if (mejor.proteina > peor.proteina) razones.push("más proteína");
-  if (mejor.sal < peor.sal) razones.push("menos sal");
-  if (mejor.fibra > peor.fibra) razones.push("más fibra");
+  let mensajes = [];
 
-  if (razones.length === 0) return "✔ Mejor equilibrio nutricional";
+  if (peor.azucar > 0 && mejor.azucar === 0) {
+    mensajes.push("🚫 Contiene azúcar añadida");
+  }
 
-  return "✔ Tiene " +
-    razones.join(", ").replace(/, ([^,]*)$/, " y $1");
+  if (mejor.azucar < peor.azucar && peor.azucar > 0) {
+    const ratio = (peor.azucar / (mejor.azucar || 1)).toFixed(1);
+    mensajes.push(`🔥 ${ratio}x menos azúcar`);
+  }
+
+  if (mejor.calorias < peor.calorias && peor.calorias > 0) {
+    const ratio = (peor.calorias / (mejor.calorias || 1)).toFixed(1);
+    mensajes.push(`⚡ ${ratio}x menos calorías`);
+  }
+
+  if (mensajes.length === 0) {
+    return "✔ Mejor opción para consumo diario";
+  }
+
+  return mensajes.join("<br>");
 }
 
 // 🧾 ESTADO
@@ -177,7 +187,6 @@ function compararProductos() {
 
   const explicacion = generarExplicacion(mejor, peor);
 
-  // 💾 historial
   historial.unshift(`${mejor.nombre} > ${peor.nombre}`);
   localStorage.setItem("historial", JSON.stringify(historial));
 
@@ -186,11 +195,18 @@ function compararProductos() {
       <h2>🏆 Mejor opción</h2>
       <strong>${mejor.nombre}</strong>
 
-      <div style="font-size:30px;font-weight:bold;margin-top:10px;">
+      <div style="font-size:32px;font-weight:bold;margin-top:10px;">
         🔥 ${mejor.calorias} kcal
       </div>
 
       <div class="score ${colorMejor}">${scoreMejor}/100</div>
+
+      <div class="badge">
+        ${scoreMejor >= 70 ? "🟢 Muy saludable" :
+          scoreMejor >= 40 ? "🟡 Aceptable" :
+          "🔴 Evitar"}
+      </div>
+
       <div class="explain">${explicacion}</div>
     </div>
 

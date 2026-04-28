@@ -10,9 +10,8 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      background: #f4f6f8;
       margin: 0;
-      padding: 0;
     }
 
     .container {
@@ -32,18 +31,27 @@
       margin-bottom: 20px;
     }
 
+    .instructions {
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
     button {
       width: 100%;
-      padding: 15px;
+      padding: 14px;
       margin-top: 10px;
-      border: none;
       border-radius: 12px;
+      border: none;
       font-size: 16px;
       font-weight: bold;
     }
 
     .btn1 { background: #000; color: white; }
-    .btn2 { background: #444; color: white; }
+    .btn2 { background: #555; color: white; }
     .btnReset { background: #ddd; }
 
     #reader {
@@ -53,9 +61,18 @@
     .card {
       background: white;
       padding: 15px;
-      margin-top: 20px;
-      border-radius: 15px;
+      margin-top: 15px;
+      border-radius: 14px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .winner {
+      border-left: 6px solid #2ecc71;
+    }
+
+    .loser {
+      border-left: 6px solid #e74c3c;
+      opacity: 0.85;
     }
 
     .score {
@@ -68,11 +85,24 @@
     .amarillo { color: #f39c12; }
     .rojo { color: #e74c3c; }
 
-    .historial-item {
-      font-size: 14px;
-      border-bottom: 1px solid #eee;
-      padding: 5px 0;
+    .explain {
+      font-weight: bold;
+      margin-top: 10px;
     }
+
+    .historial-item {
+      font-size: 13px;
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
+
   </style>
 </head>
 
@@ -80,7 +110,11 @@
 
 <div class="container">
   <h1>PickWise 🛒</h1>
-  <p class="subtitle">Escanea 2 productos y elige mejor</p>
+  <p class="subtitle">Elige mejor en segundos</p>
+
+  <div class="instructions">
+    📌 Escanea 2 productos y te diremos cuál es mejor
+  </div>
 
   <button class="btn1" onclick="escanearProducto(1)">📷 Escanear producto 1</button>
   <button class="btn2" onclick="escanearProducto(2)">📷 Escanear producto 2</button>

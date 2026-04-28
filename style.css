@@ -42,6 +42,7 @@ button {
   font-size: 16px;
   font-weight: bold;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 button:active {
@@ -65,15 +66,17 @@ button:active {
 /* SCANNER */
 #reader {
   margin-top: 20px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 /* TARJETAS */
 .card {
   background: white;
-  padding: 15px;
+  padding: 16px;
   margin-top: 15px;
-  border-radius: 14px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  border-radius: 16px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
   animation: fadeIn 0.4s ease;
 }
 
@@ -84,7 +87,7 @@ button:active {
 
 .loser {
   border-left: 6px solid #e74c3c;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 /* SCORE */

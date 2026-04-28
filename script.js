@@ -2,15 +2,16 @@ let producto1 = null;
 let producto2 = null;
 let scanner = null;
 
-// 📷 ESCANEAR (VERSIÓN ESTABLE iPhone + Android)
+// 📦 CACHE LOCAL
+let cache = JSON.parse(localStorage.getItem("productos")) || {};
+
+// 📷 ESCANEAR
 function escanearProducto(numero) {
 
   const reader = document.getElementById("reader");
 
-  // mensaje mientras activa cámara
   reader.innerHTML = "<p class='status'>📷 Activando cámara...</p>";
 
-  // limpiar scanner anterior (MUY IMPORTANTE)
   if (scanner) {
     try {
       scanner.stop().catch(() => {});
@@ -19,7 +20,6 @@ function escanearProducto(numero) {
     scanner = null;
   }
 
-  // pequeño delay clave para iPhone
   setTimeout(() => {
 
     reader.innerHTML = "";
@@ -29,17 +29,19 @@ function escanearProducto(numero) {
     scanner.start(
       { facingMode: "environment" },
       {
-        fps: 8, // mejor para iPhone
-        qrbox: { width: 220, height: 220 }
+        fps: 5,
+        qrbox: { width: 280, height: 180 }
       },
       (decodedText) => {
 
-        // parar y limpiar cámara
         scanner.stop().then(() => {
           scanner.clear();
           scanner = null;
           reader.innerHTML = "";
         });
+
+        document.getElementById("resultado").innerHTML =
+          "<p class='status'>⚡ Procesando código...</p>";
 
         buscarProducto(decodedText, numero);
       },
@@ -50,11 +52,17 @@ function escanearProducto(numero) {
 }
 
 
-// 🔎 BUSCAR PRODUCTO
+// 🔎 BUSCAR PRODUCTO (OPTIMIZADO)
 function buscarProducto(barcode, numero) {
 
+  // 🧠 PRIMERO BUSCA EN CACHE
+  if (cache[barcode]) {
+    procesarProducto(cache[barcode], numero);
+    return;
+  }
+
   document.getElementById("resultado").innerHTML =
-    "<p class='status'>🔍 Buscando producto...</p>";
+    "<p class='status'>🔍 Analizando producto...</p>";
 
   fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
     .then(res => res.json())
@@ -76,19 +84,30 @@ function buscarProducto(barcode, numero) {
         sal: parseFloat(p.nutriments?.salt_100g) || 0
       };
 
-      if (numero === 1) {
-        producto1 = producto;
-      } else {
-        producto2 = producto;
-      }
+      // 💾 GUARDAR EN CACHE
+      cache[barcode] = producto;
+      localStorage.setItem("productos", JSON.stringify(cache));
 
-      if (producto1 && producto2) {
-        comparar();
-      } else {
-        document.getElementById("resultado").innerHTML =
-          `<p class="status">✔ Producto ${numero} escaneado. Falta el otro.</p>`;
-      }
+      procesarProducto(producto, numero);
     });
+}
+
+
+// 🧠 PROCESAR PRODUCTO
+function procesarProducto(producto, numero) {
+
+  if (numero === 1) {
+    producto1 = producto;
+  } else {
+    producto2 = producto;
+  }
+
+  if (producto1 && producto2) {
+    comparar();
+  } else {
+    document.getElementById("resultado").innerHTML =
+      `<p class="status">✔ Producto ${numero} escaneado. Falta el otro.</p>`;
+  }
 }
 
 

@@ -3,7 +3,6 @@ let producto2 = null;
 let scannerActivo = false;
 let html5QrCode = null;
 
-// 📦 HISTORIAL PERSISTENTE
 let historial = JSON.parse(localStorage.getItem("historial")) || [];
 
 
@@ -12,6 +11,9 @@ function escanearProducto(numero) {
   if (scannerActivo) return;
 
   scannerActivo = true;
+
+  document.getElementById("resultado").innerHTML =
+    "<div class='status'>📷 Escaneando...</div>";
 
   html5QrCode = new Html5Qrcode("reader");
 
@@ -26,10 +28,13 @@ function escanearProducto(numero) {
       const producto = await buscarProducto(codigo);
       if (!producto) return;
 
-      if (numero === 1) producto1 = producto;
-      else producto2 = producto;
-
-      mostrarEstado();
+      if (numero === 1) {
+        producto1 = producto;
+        mostrarEstado("Producto 1 añadido ✔️");
+      } else {
+        producto2 = producto;
+        mostrarEstado("Producto 2 añadido ✔️");
+      }
 
       if (producto1 && producto2) {
         compararProductos();
@@ -74,9 +79,7 @@ function calcularScore(p) {
     p.proteina * 2 -
     p.fibra * 1.5;
 
-  let score = 100 - penalizacion;
-
-  return Math.max(0, Math.min(100, Math.round(score)));
+  return Math.max(0, Math.min(100, Math.round(100 - penalizacion)));
 }
 
 
@@ -97,28 +100,25 @@ function generarExplicacion(mejor, peor) {
   if (mejor.sal < peor.sal) razones.push("menos sal");
   if (mejor.fibra > peor.fibra) razones.push("más fibra");
 
-  if (razones.length === 0) return "Perfil nutricional más equilibrado.";
+  if (razones.length === 0) return "Mejor equilibrio nutricional";
 
-  return "Mejor porque tiene " +
-    razones.join(", ").replace(/, ([^,]*)$/, " y $1");
+  return "✔ " + razones.join(", ").replace(/, ([^,]*)$/, " y $1");
 }
 
 
 // 🧾 ESTADO
-function mostrarEstado() {
-  const r = document.getElementById("resultado");
-
-  r.innerHTML = `
+function mostrarEstado(msg) {
+  document.getElementById("resultado").innerHTML = `
     <div class="card">
-      <strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "No escaneado"}<br>
-      <strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "No escaneado"}<br>
-      ${producto1 && !producto2 ? "<p>👉 Escanea el segundo producto</p>" : ""}
+      <strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "—"}<br>
+      <strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "—"}<br>
+      <div class="status">${msg}</div>
     </div>
   `;
 }
 
 
-// ⚖️ COMPARAR + GUARDAR HISTORIAL
+// ⚖️ COMPARAR
 function compararProductos() {
   const r = document.getElementById("resultado");
 
@@ -136,19 +136,18 @@ function compararProductos() {
 
   const explicacion = generarExplicacion(mejor, peor);
 
-  // 💾 GUARDAR HISTORIAL
   historial.unshift(`${mejor.nombre} > ${peor.nombre}`);
   localStorage.setItem("historial", JSON.stringify(historial));
 
   r.innerHTML = `
-    <div class="card">
+    <div class="card winner">
       <h2>🏆 Mejor opción</h2>
       <strong>${mejor.nombre}</strong>
       <div class="score ${colorMejor}">${scoreMejor}/100</div>
-      <p><strong>${explicacion}</strong></p>
+      <div class="explain">${explicacion}</div>
     </div>
 
-    <div class="card">
+    <div class="card loser">
       <h3>⚠️ Menos recomendable</h3>
       <strong>${peor.nombre}</strong>
       <div class="score ${colorPeor}">${scorePeor}/100</div>
@@ -168,11 +167,11 @@ function reiniciar() {
   producto2 = null;
 
   if (html5QrCode) {
-    try { html5QrCode.stop(); } catch (e) {}
+    try { html5QrCode.stop(); } catch {}
   }
 
   document.getElementById("reader").innerHTML = "";
-  document.getElementById("resultado").innerHTML = "<p>🔄 Listo para nueva comparación</p>";
+  document.getElementById("resultado").innerHTML = "<div class='status'>🔄 Listo para empezar</div>";
 
   scannerActivo = false;
 }

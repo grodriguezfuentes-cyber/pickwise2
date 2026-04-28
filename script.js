@@ -1,47 +1,229 @@
+let producto1 = null;
+let producto2 = null;
+let scannerActivo = false;
+let html5QrCode = null;
+
+// 📦 historial persistente
+let historial = JSON.parse(localStorage.getItem("historial")) || [];
+
+// 📷 ESCANEAR
 function escanearProducto(numero) {
+  if (scannerActivo) return;
 
-  const reader = document.getElementById("reader");
-  if (!reader) return;
+  scannerActivo = true;
 
-  reader.innerHTML = "📷 Activando cámara...";
+  document.getElementById("resultado").innerHTML =
+    "<div class='status'>📷 Escaneando...</div>";
 
-  if (scanner) {
-    try {
-      scanner.stop().catch(() => {});
-      scanner.clear();
-    } catch {}
-    scanner = null;
+  html5QrCode = new Html5Qrcode("reader");
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+
+    async (codigo) => {
+      await html5QrCode.stop();
+      scannerActivo = false;
+
+      const producto = await buscarProducto(codigo);
+      if (!producto) {
+        document.getElementById("resultado").innerHTML =
+          "<div class='status'>❌ Producto no encontrado</div>";
+        return;
+      }
+
+      if (numero === 1) {
+        producto1 = producto;
+        mostrarEstado("Producto 1 añadido ✔️");
+      } else {
+        producto2 = producto;
+        mostrarEstado("Producto 2 añadido ✔️");
+      }
+
+      if (producto1 && producto2) {
+        compararProductos();
+      }
+    }
+  ).catch(err => console.error("Error cámara:", err));
+}
+
+// 🔍 API + DATOS
+async function buscarProducto(codigo) {
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
+    const data = await res.json();
+
+    if (data.status === 0) return null;
+
+    const p = data.product;
+    const nombre = p.product_name || "Producto";
+
+    // 🔥 CALORÍAS (nuevo, sin romper nada)
+    let kcal = p.nutriments?.["energy-kcal_100g"];
+
+    if (!kcal && p.nutriments?.energy_100g) {
+      kcal = p.nutriments.energy_100g / 4.184;
+    }
+
+    return {
+      nombre,
+      tipo: detectarTipo(nombre),
+
+      calorias: Math.round(kcal || 0),
+
+      azucar: p.nutriments?.sugars_100g ?? 0,
+      grasa: p.nutriments?.fat_100g ?? 0,
+      proteina: p.nutriments?.proteins_100g ?? 0,
+      fibra: p.nutriments?.fiber_100g ?? 0,
+      sal: p.nutriments?.salt_100g ?? 0
+    };
+
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// 🧠 DETECTAR TIPO
+function detectarTipo(nombre) {
+  nombre = nombre.toLowerCase();
+
+  if (nombre.includes("cola") || nombre.includes("juice") || nombre.includes("drink"))
+    return "bebida";
+
+  if (nombre.includes("chocolate") || nombre.includes("cookie") || nombre.includes("snack"))
+    return "snack";
+
+  if (nombre.includes("leche") || nombre.includes("milk") || nombre.includes("yogur"))
+    return "lacteo";
+
+  return "general";
+}
+
+// 🧠 SCORE INTELIGENTE
+function calcularScore(p) {
+  let score = 100;
+
+  if (p.tipo === "bebida") {
+    score -= p.azucar * 2.5;
+  } 
+  else if (p.tipo === "snack") {
+    score -= p.azucar * 1.5;
+    score -= p.grasa * 2;
+  } 
+  else if (p.tipo === "lacteo") {
+    score += p.proteina * 2.5;
+    score -= p.grasa * 1;
+  } 
+  else {
+    score -= p.azucar * 1.2;
+    score -= p.grasa * 1.5;
   }
 
-  setTimeout(() => {
+  score -= p.sal * 2;
+  score += p.fibra * 1.5;
 
-    reader.innerHTML = "";
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
 
-    scanner = new Html5Qrcode("reader");
+// 🎨 COLOR
+function obtenerColor(score) {
+  if (score >= 70) return "verde";
+  if (score >= 40) return "amarillo";
+  return "rojo";
+}
 
-    scanner.start(
-      { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: 250
-      },
-      (decodedText) => {
+// 🧠 EXPLICACIÓN INTELIGENTE
+function generarExplicacion(mejor, peor) {
+  let razones = [];
 
-        scanner.stop().then(() => {
-          scanner.clear();
-          scanner = null;
-          reader.innerHTML = "";
-        });
+  if (mejor.azucar < peor.azucar) razones.push("menos azúcar");
+  if (mejor.proteina > peor.proteina) razones.push("más proteína");
+  if (mejor.sal < peor.sal) razones.push("menos sal");
+  if (mejor.fibra > peor.fibra) razones.push("más fibra");
 
-        buscarProducto(decodedText, numero);
-      },
-      (errorMessage) => {
-        // este error es normal mientras busca código → ignorar
-      }
-    ).catch(err => {
-      console.error("Error cámara:", err);
-      reader.innerHTML = "❌ No se pudo acceder a la cámara";
-    });
+  if (razones.length === 0) return "✔ Mejor equilibrio nutricional";
 
-  }, 300);
+  return "✔ Tiene " +
+    razones.join(", ").replace(/, ([^,]*)$/, " y $1");
+}
+
+// 🧾 ESTADO
+function mostrarEstado(msg) {
+  document.getElementById("resultado").innerHTML = `
+    <div class="card">
+      <strong>Producto 1:</strong> ${producto1 ? producto1.nombre : "—"}<br>
+      <strong>Producto 2:</strong> ${producto2 ? producto2.nombre : "—"}<br>
+      <div class="status">${msg}</div>
+    </div>
+  `;
+}
+
+// ⚖️ COMPARAR
+function compararProductos() {
+  const r = document.getElementById("resultado");
+
+  const score1 = calcularScore(producto1);
+  const score2 = calcularScore(producto2);
+
+  const mejor = score1 > score2 ? producto1 : producto2;
+  const peor = score1 > score2 ? producto2 : producto1;
+
+  const scoreMejor = Math.max(score1, score2);
+  const scorePeor = Math.min(score1, score2);
+
+  const colorMejor = obtenerColor(scoreMejor);
+  const colorPeor = obtenerColor(scorePeor);
+
+  const explicacion = generarExplicacion(mejor, peor);
+
+  // 💾 historial
+  historial.unshift(`${mejor.nombre} > ${peor.nombre}`);
+  localStorage.setItem("historial", JSON.stringify(historial));
+
+  r.innerHTML = `
+    <div class="card winner">
+      <h2>🏆 Mejor opción</h2>
+      <strong>${mejor.nombre}</strong>
+
+      <div style="font-size:30px;font-weight:bold;margin-top:10px;">
+        🔥 ${mejor.calorias} kcal
+      </div>
+
+      <div class="score ${colorMejor}">${scoreMejor}/100</div>
+      <div class="explain">${explicacion}</div>
+    </div>
+
+    <div class="card loser">
+      <h3>⚠️ Menos recomendable</h3>
+      <strong>${peor.nombre}</strong>
+
+      <div style="font-size:26px;margin-top:8px;">
+        🔥 ${peor.calorias} kcal
+      </div>
+
+      <div class="score ${colorPeor}">${scorePeor}/100</div>
+    </div>
+
+    <div class="card">
+      <h3>📊 Historial</h3>
+      ${historial.map(h => `<div class="historial-item">${h}</div>`).join("")}
+    </div>
+  `;
+}
+
+// 🔄 REINICIAR
+function reiniciar() {
+  producto1 = null;
+  producto2 = null;
+
+  if (html5QrCode) {
+    try { html5QrCode.stop(); } catch {}
+  }
+
+  document.getElementById("reader").innerHTML = "";
+  document.getElementById("resultado").innerHTML =
+    "<div class='status'>🔄 Listo para empezar</div>";
+
+  scannerActivo = false;
 }

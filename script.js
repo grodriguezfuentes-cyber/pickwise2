@@ -2,14 +2,15 @@ let producto1 = null;
 let producto2 = null;
 let scanner = null;
 
-// 📦 CACHE LOCAL
 let cache = JSON.parse(localStorage.getItem("productos")) || {};
 
-// 📷 ESCANEAR
 function escanearProducto(numero) {
 
   const reader = document.getElementById("reader");
-  reader.innerHTML = "<p class='status'>📷 Activando cámara...</p>";
+
+  if (!reader) return;
+
+  reader.innerHTML = "📷 Activando cámara...";
 
   if (scanner) {
     try {
@@ -27,10 +28,7 @@ function escanearProducto(numero) {
 
     scanner.start(
       { facingMode: "environment" },
-      {
-        fps: 5,
-        qrbox: { width: 280, height: 180 }
-      },
+      { fps: 5, qrbox: { width: 250, height: 200 } },
       (decodedText) => {
 
         scanner.stop().then(() => {
@@ -39,19 +37,14 @@ function escanearProducto(numero) {
           reader.innerHTML = "";
         });
 
-        document.getElementById("resultado").innerHTML =
-          "<p class='status'>⚡ Procesando código...</p>";
-
         buscarProducto(decodedText, numero);
-      },
-      () => {}
+      }
     );
 
   }, 300);
 }
 
 
-// 🔎 BUSCAR PRODUCTO
 function buscarProducto(barcode, numero) {
 
   if (cache[barcode]) {
@@ -59,10 +52,7 @@ function buscarProducto(barcode, numero) {
     return;
   }
 
-  document.getElementById("resultado").innerHTML =
-    "<p class='status'>🔍 Analizando producto...</p>";
-
-  fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
+  fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json?nocache=${Date.now()}`)
     .then(res => res.json())
     .then(data => {
 
@@ -73,7 +63,6 @@ function buscarProducto(barcode, numero) {
 
       const p = data.product;
 
-      // 🔥 FIX CALORÍAS (kcal o kJ)
       let kcal = p.nutriments?.["energy-kcal_100g"];
 
       if (!kcal && p.nutriments?.energy_100g) {
@@ -94,116 +83,53 @@ function buscarProducto(barcode, numero) {
       localStorage.setItem("productos", JSON.stringify(cache));
 
       procesarProducto(producto, numero);
-    });
+    })
+    .catch(() => mostrarError("Error al buscar producto"));
 }
 
 
-// 🧠 PROCESAR
 function procesarProducto(producto, numero) {
 
-  if (numero === 1) {
-    producto1 = producto;
-  } else {
-    producto2 = producto;
-  }
+  if (numero === 1) producto1 = producto;
+  else producto2 = producto;
 
-  if (producto1 && producto2) {
-    comparar();
-  } else {
-    document.getElementById("resultado").innerHTML =
-      `<p class="status">✔ Producto ${numero} escaneado. Falta el otro.</p>`;
-  }
+  if (producto1 && producto2) comparar();
 }
 
 
-// 🧠 SCORE
-function score(p) {
-  return (
-    (p.proteina * 2) +
-    (p.fibra * 2) -
-    (p.azucar * 1.5) -
-    (p.grasa * 1.2) -
-    (p.sal * 1.5)
-  );
-}
-
-
-// ⚖️ COMPARAR
 function comparar() {
 
-  const s1 = score(producto1);
-  const s2 = score(producto2);
+  let ganador = producto1;
+  let perdedor = producto2;
 
-  let ganador, perdedor;
-
-  if (s1 > s2) {
-    ganador = producto1;
-    perdedor = producto2;
-  } else {
+  if (producto2.calorias < producto1.calorias) {
     ganador = producto2;
     perdedor = producto1;
   }
 
-  // 💥 FRASE INTELIGENTE
-  let mensaje = "";
-
-  if (ganador.calorias < perdedor.calorias) {
-    mensaje = "🔥 Tiene menos calorías";
-  } else if (ganador.azucar < perdedor.azucar) {
-    mensaje = "🍬 Tiene menos azúcar";
-  } else {
-    mensaje = "👍 Mejor perfil nutricional";
-  }
-
   document.getElementById("resultado").innerHTML = `
-    <div class="card winner">
+    <div>
       <h3>🏆 Mejor opción</h3>
       <p><strong>${ganador.nombre}</strong></p>
-      <p class="calorias">🔥 ${ganador.calorias} kcal</p>
-      <p class="mensaje">${mensaje}</p>
-
-      <small>
-        Azúcar: ${ganador.azucar}g · 
-        Grasa: ${ganador.grasa}g · 
-        Proteína: ${ganador.proteina}g
-      </small>
+      <h2>🔥 ${ganador.calorias} kcal</h2>
     </div>
 
-    <div class="card loser">
+    <div>
       <h3>⚠️ Menos recomendable</h3>
       <p><strong>${perdedor.nombre}</strong></p>
-      <p class="calorias">🔥 ${perdedor.calorias} kcal</p>
-
-      <small>
-        Azúcar: ${perdedor.azucar}g · 
-        Grasa: ${perdedor.grasa}g · 
-        Proteína: ${perdedor.proteina}g
-      </small>
+      <h2>🔥 ${perdedor.calorias} kcal</h2>
     </div>
   `;
 }
 
 
-// 🔄 REINICIAR
 function reiniciar() {
   producto1 = null;
   producto2 = null;
-
-  if (scanner) {
-    try {
-      scanner.stop().catch(() => {});
-      scanner.clear();
-    } catch {}
-    scanner = null;
-  }
-
-  document.getElementById("reader").innerHTML = "";
   document.getElementById("resultado").innerHTML = "";
 }
 
 
-// ❌ ERROR
 function mostrarError(msg) {
-  document.getElementById("resultado").innerHTML =
-    `<p style="color:red">${msg}</p>`;
+  document.getElementById("resultado").innerHTML = `<p>${msg}</p>`;
 }

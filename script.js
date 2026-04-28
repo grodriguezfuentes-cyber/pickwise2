@@ -3,6 +3,7 @@ let producto2 = null;
 let scannerActivo = false;
 let html5QrCode = null;
 
+// 📦 historial persistente
 let historial = JSON.parse(localStorage.getItem("historial")) || [];
 
 
@@ -26,7 +27,11 @@ function escanearProducto(numero) {
       scannerActivo = false;
 
       const producto = await buscarProducto(codigo);
-      if (!producto) return;
+      if (!producto) {
+        document.getElementById("resultado").innerHTML =
+          "<div class='status'>❌ Producto no encontrado</div>";
+        return;
+      }
 
       if (numero === 1) {
         producto1 = producto;
@@ -40,11 +45,11 @@ function escanearProducto(numero) {
         compararProductos();
       }
     }
-  ).catch(err => console.error(err));
+  ).catch(err => console.error("Error cámara:", err));
 }
 
 
-// 🔍 API
+// 🔍 API + TIPO
 async function buscarProducto(codigo) {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
@@ -53,9 +58,12 @@ async function buscarProducto(codigo) {
     if (data.status === 0) return null;
 
     const p = data.product;
+    const nombre = p.product_name || "Producto";
 
     return {
-      nombre: p.product_name || "Producto",
+      nombre,
+      tipo: detectarTipo(nombre),
+
       azucar: p.nutriments?.sugars_100g ?? 0,
       grasa: p.nutriments?.fat_100g ?? 0,
       proteina: p.nutriments?.proteins_100g ?? 0,
@@ -70,16 +78,47 @@ async function buscarProducto(codigo) {
 }
 
 
-// 🧠 SCORE
-function calcularScore(p) {
-  let penalizacion =
-    p.azucar * 1.2 +
-    p.grasa * 1.5 +
-    p.sal * 2.5 -
-    p.proteina * 2 -
-    p.fibra * 1.5;
+// 🧠 DETECTAR TIPO
+function detectarTipo(nombre) {
+  nombre = nombre.toLowerCase();
 
-  return Math.max(0, Math.min(100, Math.round(100 - penalizacion)));
+  if (nombre.includes("cola") || nombre.includes("juice") || nombre.includes("drink"))
+    return "bebida";
+
+  if (nombre.includes("chocolate") || nombre.includes("cookie") || nombre.includes("snack"))
+    return "snack";
+
+  if (nombre.includes("leche") || nombre.includes("milk") || nombre.includes("yogur"))
+    return "lacteo";
+
+  return "general";
+}
+
+
+// 🧠 SCORE INTELIGENTE
+function calcularScore(p) {
+  let score = 100;
+
+  if (p.tipo === "bebida") {
+    score -= p.azucar * 2.5;
+  } 
+  else if (p.tipo === "snack") {
+    score -= p.azucar * 1.5;
+    score -= p.grasa * 2;
+  } 
+  else if (p.tipo === "lacteo") {
+    score += p.proteina * 2.5;
+    score -= p.grasa * 1;
+  } 
+  else {
+    score -= p.azucar * 1.2;
+    score -= p.grasa * 1.5;
+  }
+
+  score -= p.sal * 2;
+  score += p.fibra * 1.5;
+
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 
@@ -91,7 +130,7 @@ function obtenerColor(score) {
 }
 
 
-// 🧠 EXPLICACIÓN
+// 🧠 EXPLICACIÓN INTELIGENTE
 function generarExplicacion(mejor, peor) {
   let razones = [];
 
@@ -100,9 +139,10 @@ function generarExplicacion(mejor, peor) {
   if (mejor.sal < peor.sal) razones.push("menos sal");
   if (mejor.fibra > peor.fibra) razones.push("más fibra");
 
-  if (razones.length === 0) return "Mejor equilibrio nutricional";
+  if (razones.length === 0) return "✔ Mejor equilibrio nutricional";
 
-  return "✔ " + razones.join(", ").replace(/, ([^,]*)$/, " y $1");
+  return "✔ Tiene " +
+    razones.join(", ").replace(/, ([^,]*)$/, " y $1");
 }
 
 
@@ -136,6 +176,7 @@ function compararProductos() {
 
   const explicacion = generarExplicacion(mejor, peor);
 
+  // 💾 guardar historial
   historial.unshift(`${mejor.nombre} > ${peor.nombre}`);
   localStorage.setItem("historial", JSON.stringify(historial));
 
@@ -171,7 +212,8 @@ function reiniciar() {
   }
 
   document.getElementById("reader").innerHTML = "";
-  document.getElementById("resultado").innerHTML = "<div class='status'>🔄 Listo para empezar</div>";
+  document.getElementById("resultado").innerHTML =
+    "<div class='status'>🔄 Listo para empezar</div>";
 
   scannerActivo = false;
 }
